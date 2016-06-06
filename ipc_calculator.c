@@ -28,8 +28,7 @@ struct operation{
 	int id;
     int val1;
     int val2;
-    char operator;
-    struct operation *next;
+    char operator; 
 };
 
 
