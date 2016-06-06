@@ -25,7 +25,7 @@
 
 
 struct operation{
-    int id;
+	int id;
     int val1;
     int val2;
     char operator;
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]){
     struct list* first_element = NULL;
     struct list* last_element = NULL;
     
-    
+ 
     while ((count = (int) read(fd, &line[i], 1)) > 0) {             // read byte to byte
         if(line[i] == '\n'){
             line[i] = '\0';
@@ -72,7 +72,7 @@ int main(int argc, char *argv[]){
                 last_element = first_element;
             }
             else{
-                last_element =  list_add(str_temp, last_element);
+            	last_element =  list_add(str_temp, last_element);
             }
             
             i = 0;
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]){
     close(fd);
     
     if(first_element == NULL){
-        syserr (argv[0], "file is empty!");
+         syserr (argv[0], "file is empty!");
     }
     
     n_operations = line_count - 1;  // becouse the first line isn't a operation
@@ -101,14 +101,14 @@ int main(int argc, char *argv[]){
         list = list->next;                    // take first element of this list as the first operation
         if (list != NULL)
         {
-            char* id = strtok(list->value, " ");
-            char* val1 = strtok(NULL, " ");
-            char* op = strtok(NULL, " ");
+            char* id = strtok(list->value, " "); 
+            char* val1 = strtok(NULL, " "); 
+            char* op = strtok(NULL, " "); 
             char* val2  = strtok(NULL, " ");
             
             if(val1 == NULL || op == NULL || val2 == NULL)
-                syserr (argv[0], "Wrong operation format");
-            
+         		syserr (argv[0], "Wrong operation format");
+         		
             printf("process %s: \n	operation: %s %s %s\n",id, val1, op, val2);
             
             operations[i].id = atoi(id);
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]){
             operations[i].val2 = atoi(val2);
             operations[i].operator = op[0];
             i++;
-            
+             
         }
     } while (list != NULL);
     
@@ -153,50 +153,50 @@ int main(int argc, char *argv[]){
     //int results[n_operations];                        // array of results of operations
     //int *id = (int*) malloc(sizeof (int) * n_operations);
     /*
-     int id_number = 0 ;
-     pid_t pid;
-     
-     
-     printf("\nThe parent process id: %d\n", getpid());
-     for (int i = 0; i < NPROC; i++) {
-     pid = fork();
-     if (pid < 0) {
-     syserr("fork()", "cannot create a new process");
-     } else if (pid == 0) {      // code execute from child
-     id_number = i+1;        // assign id number to process (utile per identificare poi il processo a cui far eseguire l'operazione)
-     child();
-     break;
-     } else {                    // code execute from parent
-     parent();
-     childs[i] = pid;
-     printf("The child process ID is: %d\n", pid);
-     }
-     }
-     
-     // i figli devono attendere ad un semaforo per eseguire un calcolo.
-     
-     
-     
-     for (int i = 0; i < n_operations; i++) {
-     if (id_number == id[i]) {
-     // calculate operation
-     }
-     }
-     
-     
-     
-     close(fd);  // close file descriptor
-     
-     
-     //for(int i = 0; i < file_size; i++){
-     //printf("buffer_file[%i]: %c\n", i, buffer_file[i]);
-     //}
-     
-     
-     
-     
-     free(buffer_file);
-     free(childs);
+    int id_number = 0 ;
+    pid_t pid;
+    
+    
+    printf("\nThe parent process id: %d\n", getpid());
+    for (int i = 0; i < NPROC; i++) {
+        pid = fork();
+        if (pid < 0) {
+            syserr("fork()", "cannot create a new process");
+        } else if (pid == 0) {      // code execute from child
+            id_number = i+1;        // assign id number to process (utile per identificare poi il processo a cui far eseguire l'operazione)
+            child();
+            break;
+        } else {                    // code execute from parent
+            parent();
+            childs[i] = pid;
+            printf("The child process ID is: %d\n", pid);
+        }
+    }
+    
+    // i figli devono attendere ad un semaforo per eseguire un calcolo.
+    
+    
+    
+    for (int i = 0; i < n_operations; i++) {
+        if (id_number == id[i]) {
+            // calculate operation
+        }
+    }
+    
+    
+    
+    close(fd);  // close file descriptor
+    
+    
+    //for(int i = 0; i < file_size; i++){
+    //printf("buffer_file[%i]: %c\n", i, buffer_file[i]);
+    //}
+    
+    
+    
+    
+    free(buffer_file);
+    free(childs);
      */
     
     return 0;
