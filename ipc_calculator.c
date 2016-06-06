@@ -88,18 +88,19 @@ int main(int argc, char *argv[]){
     }
     
     n_operations = line_count - 1;  // becouse the first line isn't a operation
-    struct list* list = first_element;
+    printf("n_operations %i\n", n_operations);
+    
     int NPROC = atoi(first_element->value);         // number of process to create
     
     struct operation* operations = (struct operation*)malloc(sizeof(struct operation)*n_operations);
     
-    printf("n_operations %i\n", n_operations);
+    struct list* list = first_element->next;
+    i = 0; 
     
-    i = 0;
-    do {
-        list = list->next;                    // take first element of this list as the first operation
-        if (list != NULL)
-        {
+    while (list != NULL)
+    {
+                 // take first element of this list as the first operation
+        
             char* id = strtok(list->value, " "); 
             char* val1 = strtok(NULL, " "); 
             char* op = strtok(NULL, " "); 
@@ -116,8 +117,8 @@ int main(int argc, char *argv[]){
             operations[i].operator = op[0];
             i++;
              
-        }
-    } while (list != NULL);
+        list = list->next;
+    } 
     
     
     
