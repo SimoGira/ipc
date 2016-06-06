@@ -94,29 +94,29 @@ int main(int argc, char *argv[]){
     
     struct operation* operations = (struct operation*)malloc(sizeof(struct operation)*n_operations);
     
+	// take first element of this list as the first operation
     struct list* list = first_element->next;
     i = 0; 
     
     while (list != NULL)
     {
-                 // take first element of this list as the first operation
+    
+        char* id = strtok(list->value, " "); 
+        char* val1 = strtok(NULL, " "); 
+        char* op = strtok(NULL, " "); 
+        char* val2  = strtok(NULL, " ");
         
-            char* id = strtok(list->value, " "); 
-            char* val1 = strtok(NULL, " "); 
-            char* op = strtok(NULL, " "); 
-            char* val2  = strtok(NULL, " ");
-            
-            if(val1 == NULL || op == NULL || val2 == NULL)
-         		syserr (argv[0], "Wrong operation format");
-         		
-            printf("process %s: \n	operation: %s %s %s\n",id, val1, op, val2);
-            
-            operations[i].id = atoi(id);
-            operations[i].val1 = atoi(val1);
-            operations[i].val2 = atoi(val2);
-            operations[i].operator = op[0];
-            i++;
-             
+        if(val1 == NULL || op == NULL || val2 == NULL)
+     		syserr (argv[0], "Wrong operation format");
+     		
+        printf("process %s: \n	operation: %s %s %s\n",id, val1, op, val2);
+        
+        operations[i].id = atoi(id);
+        operations[i].val1 = atoi(val1);
+        operations[i].val2 = atoi(val2);
+        operations[i].operator = op[0];
+        i++;
+         
         list = list->next;
     } 
     
