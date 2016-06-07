@@ -131,7 +131,6 @@ int main(int argc, char *argv[]){
 	// take first element of this list as the first operation
     struct list* list = first_element->next;
     i = 0; 
-     printf("n_operations %i\n", n_operations);
     while (list != NULL)
     {
     
@@ -143,7 +142,7 @@ int main(int argc, char *argv[]){
         if(val1 == NULL || op == NULL || val2 == NULL)
      		syserr (argv[0], "Wrong operation format");
      		
-         printf("process %s: \n	operation: %s %s %s\n",id, val1, op, val2);
+       	//printf("process %s: \n	operation: %s %s %s\n",id, val1, op, val2);
         
         operations[i].id = atoi(id);
         operations[i].val1 = atoi(val1);
@@ -154,9 +153,11 @@ int main(int argc, char *argv[]){
         list = list->next;
     }  
     
+     printf("trying to free");
     // free the lines memory
     list_free(first_element);
     first_element = NULL;
+     printf(" done.");
          
     childs_pid = (int*) malloc(sizeof (int*) * NPROC);       // allocate memory for childs 
   
