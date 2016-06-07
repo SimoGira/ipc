@@ -29,9 +29,6 @@
 #define MYDEBUG printf ("This is line %d.\n", __LINE__);
 
 
-struct sembuf P, V;
-
-
 #ifndef __APPLE__
 union semun
 {
@@ -67,19 +64,35 @@ int * current_result;
 int * childs_pid; 
 bool * childs_status;
 
+struct sembuf sops;
+
+void SemV(int semid, int num)
+{
+	sops.sem_op = 1;
+	sops.sem_flg = SEM_UNDO;
+	sops.sem_num = num;
+	semop (semid, &sops , 1);
+}
+
+void SemP(int semid, int num)
+{ 
+	sops.sem_op = -1;
+	sops.sem_flg = SEM_UNDO;
+	sops.sem_num = num;
+	semop (semid, &sops , 1);
+}
 
 int main(int argc, char *argv[]){
     
     char *title = "~~~~~~~~~~~~~~~~~~~\n\e[7;36m  IPC CALCULATOR   \e[0m\n~~~~~~~~~~~~~~~~~~~\n";
     int count = (int) write(STDOUT, title, strlen(title));
     if (count == -1)
-        syserr (argv[0], "write() failure");
-    
-    int fd;                      // a file descriptor
+        syserr (argv[0], "write() failure"); 
+        
     int line_count = 0;
     
-    // MARK: open file
-    fd = open("configuration.txt",O_RDONLY|O_SYNC, S_IRUSR);
+    // open file
+    int fd = open("configuration.txt",O_RDONLY|O_SYNC, S_IRUSR);
     if (fd < 0) {
         syserr (argv[0], "open() failure");
     }
@@ -90,7 +103,6 @@ int main(int argc, char *argv[]){
     struct list* first_element = NULL;
     struct list* last_element = NULL;
     
- 
     while ((count = (int) read(fd, &line[i], 1)) > 0) {             // read byte to byte
         if(line[i] == '\n'){
             line[i] = '\0';
@@ -152,7 +164,7 @@ int main(int argc, char *argv[]){
         i++;
          
         list = list->next; 
-    }  
+    } 
      
     // free the lines memory
     list_free(first_element);
@@ -160,38 +172,51 @@ int main(int argc, char *argv[]){
          
     childs_pid = (int*) malloc(sizeof (int*) * NPROC);       // allocate memory for childs 
   
-    // semafori
-    int semid;
-    unsigned short sem_init[2] = {1,1};
-    unsigned short sem_out_test[2];
- 	//struct sembuf * sops =  ( struct sembuf *) malloc ( sizeof ( struct sembuf )); 
- 	int num_semafori = 2;
- 	if (( semid = semget (ftok(argv[0], 's') , num_semafori, IPC_CREAT | IPC_EXCL | 0666)) == -1) {
+    // semafori per i figli
+    
+    int sem_computing;
+    if (( sem_computing = semget (ftok(argv[0], 'a') , NPROC, IPC_CREAT | IPC_EXCL | 0666)) == -1) {
 		syserr_ext (argv[0], " semget " , __LINE__);
 	}
-
+	
+    int sem_wait_data;
+    if (( sem_wait_data = semget (ftok(argv[0], 'b') , NPROC, IPC_CREAT | IPC_EXCL | 0666)) == -1) {
+		syserr_ext (argv[0], " semget " , __LINE__);
+	}
+	
+    int sem_request_result;
+    if (( sem_request_result = semget (ftok(argv[0], 'c') , NPROC, IPC_CREAT | IPC_EXCL | 0666)) == -1) {
+		syserr_ext (argv[0], " semget " , __LINE__);
+	}
+	
+	//semafori per il padre
+	// 0: mutex   1: result_ready
+	int sem_parent;
+	if (( sem_parent = semget (ftok(argv[0], 'd') , 2, IPC_CREAT | IPC_EXCL | 0666)) == -1) {
+		syserr_ext (argv[0], " semget " , __LINE__);
+	}
+	 
+    unsigned short sem_init[2] = {1, 0};
+    unsigned short sem_out_test[2];
+    
     union semun arg; 
 	arg.array = sem_init;
-	semctl(semid, num_semafori, SETALL, arg);
+	semctl(sem_parent, 2, SETALL, arg);
  
  	// TEST
 	arg.array = sem_out_test;
-	semctl(semid, num_semafori, GETALL, arg); 
+	semctl(sem_parent, 2, GETALL, arg); 
 	printf("Semaphore init values: %d %d\n",sem_out_test[0], sem_out_test[1]);
 
-	/* usare p e v
-	P.sem_op = -1;	// p
-	P.sem_flg = SEM_UNDO;
-    P.sem_num = 0;
-	
-	V.sem_op = 1;  // v
-	V.sem_op = SEM_UNDO;
-    P.sem_num = 1;
-    */
-	 
+
+	// memoria condivisa
 	current_operation = (struct operation*) xmalloc(SMD_OP, sizeof(struct operation));	
 	current_result = (int*) xmalloc(SMD_RES, sizeof(int));	 
     childs_status = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);
+    
+    //liberi
+    for(int i = 0; i < NPROC; i++)
+    	childs_status[i] = true;
     
     pid_t pid; 
     for (int i = 0; i < NPROC; i++)
@@ -214,12 +239,16 @@ int main(int argc, char *argv[]){
         parent(); 
         
         // cancella semafori
-		if (semctl(semid, 0, IPC_RMID, NULL) == -1) 
-			syserr(argv[0], "Error semaphore!"); 
+		if (semctl(sem_computing, 0, IPC_RMID, NULL) == -1) 
+			syserr(argv[0], "Error deleting sem_computing!"); 
+		if (semctl(sem_wait_data, 0, IPC_RMID, NULL) == -1) 
+			syserr(argv[0], "Error deleting sem_wait_data!"); 
+		if (semctl(sem_request_result, 0, IPC_RMID, NULL) == -1) 
+			syserr(argv[0], "Error deleting sem_request_result!"); 
+		if (semctl(sem_parent, 0, IPC_RMID, NULL) == -1) 
+			syserr(argv[0], "Error deleting sem_parent!"); 
     }
-    
-    // i figli devono attendere ad un semaforo per eseguire un calcolo.
- 
+     
     return 0;
 }
 
@@ -238,7 +267,7 @@ void parent()
 
 void child()
 {  
-	//can use shared memory
+	
 	
 	printf("figlio %i terminato\n", id_number);
 }
