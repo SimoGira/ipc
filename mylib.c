@@ -21,14 +21,29 @@
 
 void * xmalloc ( key_t key , const size_t size ) {
 	const int shmid = shmget ( key , size + sizeof ( XMem ) - sizeof ( char ) , 0666| IPC_CREAT );
-	if ( shmid == -1) return NULL ;
+	if ( shmid == -1)
+         syserr ("xmalloc", "shmget");
+         
 	XMem * ret = ( XMem *) shmat ( shmid , NULL , 0);
-	if ( ret == ( void *) -1) return NULL ;
+	if ( ret == ( void *) -1) 
+         syserr ("xmalloc", "shmat");
+         
 	ret->key = key ;
 	ret->shmid = shmid ;
 	return ret-> buf ;
 }
 // int * xi = ( int *) xmalloc ( ftok ( argv [0] , ’a ’) , sizeof ( int ) * 8);
+
+void * xattach ( key_t key , const size_t size ) {
+	const int shmid = shmget ( key , size , 0);
+	if ( shmid == -1)
+         syserr ("xattach", "shmget");
+	void * ret = shmat ( shmid , NULL , 0);
+	if ( ret == ( void *) -1)
+         syserr ("xattach", "shmat");
+	return ret;
+}
+
 
 void xfree ( void * ptr ) {
 	XMem tmp ;

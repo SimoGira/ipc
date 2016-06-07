@@ -28,6 +28,7 @@ typedef struct XMem {
 
 void * xmalloc ( key_t key , const size_t size );
 void xfree(void * address);
+void * xattach ( key_t key , const size_t size );
 
 
 void syserr(char *prog, char *msg);

@@ -18,52 +18,17 @@
 # include <sys/ipc.h>
 # include <sys/shm.h>
 
-// CREAZIONE
-// int shmget ( key_t key , size_t size , int flags );
-
-// ATTACCARE
-// void * shmat ( int shmid , void * shmaddr , int flag ) 
-
-// STACCARE
-// int shmdt ( void * shmaddr ) 
-
-// GESTIRE
-// # include < sys / types .h >  
-
-// ESEMPIO
-
-//	int shmid1 = shmget ( key1 , sizeof ( int ) ,0666| IPC_CREAT );
-//	int * i1 = ( int *) shmat ( shmid1 , NULL , 0);
-
- /*
-	int shmid2 = shmget ( key2 , sizeof ( int ) * 10 ,0666| IPC_CREAT );
-	int * i2 = ( int *) shmat ( shmid2 , NULL , 0);
-	typedef struct Data { // Layout : memoria c o n t i g u a ! 
-	int i1 ;
-	char buf [20];
-	int i2 ;
-	} Data ;
-	int shmid3 = shmget ( key3 , sizeof ( Data ) ,0666| IPC_CREAT );
-	Data * d = ( Data *) shmat ( shmid3 , NULL , 0);
-	typedef struct Msg { //As mqueue
-	long type ;
-	char buf [1];
-	} Msg ;
-	int shmid4 = shmget ( key4 , sizeof ( Msg )+ sizeof ( char )*256 ,0666| IPC_CREAT );
-	Msg * d = ( Msg *) shmat ( shmid4 , NULL , 0);
- */
-
+ 
 // semafori 
 #include <sys/types.h>
 #include <sys/sem.h> 
 
-
-
- 
 #include "mylib.h"
 #define STDIN 0
 #define STDOUT 1
 #define MYDEBUG printf ("This is line %d.\n", __LINE__);
+
+
 struct sembuf P, V;
 
 union semun
@@ -82,15 +47,22 @@ struct operation{
 };
 
 struct operation* operations;
-int *childs;
-bool *free_childs;
-int *results;
+int *childs_pid; 
 int id_number = 0;
 int n_operations = -1;
 int NPROC = 0;
 
 void parent();
 void child();
+
+
+const int SMD_OP = 101;
+const int SMD_RES = 102;
+const int SMD_STATUS = 103;
+struct operation* current_operation;
+int *results;
+bool *child_status;
+
 
 int main(int argc, char *argv[]){
     
@@ -182,16 +154,13 @@ int main(int argc, char *argv[]){
     list_free(first_element);
     first_element = NULL;
          
-    childs = (int*) malloc(sizeof (int*) * NPROC);       // allocate memory for childs
-    free_childs = (bool*) malloc(sizeof (bool*) * NPROC);       // allocate memory for childs
-    
-    results = (int*) malloc(sizeof (int*) * n_operations);  // array of results of operations
-    
+    childs_pid = (int*) malloc(sizeof (int*) * NPROC);       // allocate memory for childs 
+     
     // semafori
     int semid;
-    short sem_init[2] = {1,1};
-    short sem_out_test[2];
- 	struct sembuf * sops =  ( struct sembuf *) malloc ( sizeof ( struct sembuf ));
+    unsigned short sem_init[2] = {1,1};
+    unsigned short sem_out_test[2];
+ 	//struct sembuf * sops =  ( struct sembuf *) malloc ( sizeof ( struct sembuf ));
  	int num_semafori = 2;
  	if (( semid = semget (ftok(argv[0], 's') , num_semafori , IPC_CREAT | IPC_EXCL | 0666)) == -1) {
 		syserr_ext (argv[0], " semget " , __LINE__);
@@ -216,6 +185,10 @@ int main(int argc, char *argv[]){
     P.sem_num = 1;
     */
 	 
+	current_operation = (struct operation*) xmalloc(SMD_OP, sizeof(struct operation));	
+    results = (int*) xmalloc(SMD_RES, sizeof (int*) * n_operations);
+    child_status = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);
+    
     pid_t pid; 
     for (int i = 0; i < NPROC; i++)
     {
@@ -227,7 +200,7 @@ int main(int argc, char *argv[]){
             child();
             break;
         } else {        
-            childs[i] = pid;
+            childs_pid[i] = pid;
             //printf("child %i:\n	pid: %d\n", id_number, pid);
         }
     }
@@ -242,27 +215,31 @@ int main(int argc, char *argv[]){
     }
     
     // i figli devono attendere ad un semaforo per eseguire un calcolo.
-
-    free(childs);
-    free(free_childs);
-    free(results); 
-
-	printf("	finito: %i\n ", id_number);
+ 
     return 0;
 }
 
 void parent()
 {
-	printf("> padre called\n");
+	printf("> padre called\n"); 
+    
+    sleep(1);
+    
+    xfree(current_operation);
+    xfree(results);
+    xfree(child_status);
+    free(childs_pid); 
+	printf("padre terminato\n");
 }
 
 void child()
-{
-	printf("figlio %i\n", id_number);
+{ 
+	current_operation = (struct operation*) xattach(SMD_OP, sizeof(struct operation));
+    results = (int*) xattach(SMD_RES, sizeof (int*) * n_operations);
+    child_status = (bool*) xattach(SMD_STATUS, sizeof (bool*) * NPROC);
+	
+	printf("figlio %i terminato\n", id_number);
 }
-
-
-
 
 
 
