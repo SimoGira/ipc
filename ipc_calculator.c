@@ -187,11 +187,6 @@ int main(int argc, char *argv[]){
     
     results = (int*) malloc(sizeof (int*) * n_operations);  // array of results of operations
     
-    void SetAllSemaphores(int id, short* vals)
-	{
-		
-	}
-    
     // semafori
     int semid;
     short sem_init[2] = {1,1};
@@ -244,7 +239,6 @@ int main(int argc, char *argv[]){
         // cancella semafori
 		if (semctl(semid, 0, IPC_RMID, NULL) == -1) 
 			syserr(argv[0], "Error semaphore!"); 
-
     }
     
     // i figli devono attendere ad un semaforo per eseguire un calcolo.
