@@ -159,7 +159,7 @@ int main(int argc, char *argv[]){
     first_element = NULL;
          
     childs_pid = (int*) malloc(sizeof (int*) * NPROC);       // allocate memory for childs 
-     
+ 	 printf("list");
     // semafori
     int semid;
     unsigned short sem_init[2] = {1,1};
