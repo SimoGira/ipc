@@ -150,14 +150,14 @@ int main(int argc, char *argv[]){
         operations[i].operator = op[0];
         i++;
         
+     printf(" a.\n");
         list = list->next;
+     printf(" b.\n");
     }  
-    
-     printf("trying to free");
+     
     // free the lines memory
     list_free(first_element);
     first_element = NULL;
-     printf(" done.");
          
     childs_pid = (int*) malloc(sizeof (int*) * NPROC);       // allocate memory for childs 
   
