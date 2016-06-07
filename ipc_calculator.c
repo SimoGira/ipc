@@ -52,8 +52,15 @@ struct operation{
     char operator; 
 };
 
+
+struct result {
+	int id;
+	int val;
+}
+
 struct operation* operations;
 int *childs_pid; 
+bool * free_child;
 int id_number = 0;
 int n_operations = -1;
 int NPROC = 0;
@@ -65,10 +72,9 @@ void child();
 const int SMD_OP = 101;
 const int SMD_RES = 102;
 const int SMD_STATUS = 103;
+
 struct operation* current_operation;
-int * current_result; 
-int * childs_pid; 
-bool * free_child;
+struct result* current_result; 
 
 struct sembuf sops;
 
@@ -205,7 +211,7 @@ int main(int argc, char *argv[]){
   
 	// memoria condivisa
 	current_operation = (struct operation*) xmalloc(SMD_OP, sizeof(struct operation));	
-	current_result = (int*) xmalloc(SMD_RES, sizeof(int));	 
+	current_result = (struct result*) xmalloc(SMD_RES, sizeof(struct result));	 
     free_child = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);
     
     //liberi
@@ -246,14 +252,36 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
+int get_first_free_child()
+{ 
+	for(int j = 0; j < NPROC; j++)
+    {
+    	if(free_child[j])
+    		return j;
+    }
+    return 0;
+}
+
 void parent()
 {
 	printf("> padre called\n"); 
+     
+    for(int j = 0; j < n_operations; j++)
+    {
+    	int i = operations[j].id;
+    	if(i == 0) 
+    		i = get_first_free_child();
+    	
+    	if(!free_child[i])
+    	{
+    		sem_p(sem_computing, i);
+    		
+    		sem_v(sem_request_result, i);
+    		
+    		sem_p(sem_parent, 1);
+    	}
+    }
     
-    int op_index = 0;
-    
-    
-        
     xfree(current_operation);
     xfree(current_result);
     xfree(free_child);
