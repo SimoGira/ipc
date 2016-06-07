@@ -68,6 +68,7 @@ struct list *list_add(char* value, struct list *previous){
 	
     struct list *new = (struct list*) malloc(sizeof(struct list));
     new->value = value;
+    new->next = NULL;
     previous->next = new;
     return new;
 }
