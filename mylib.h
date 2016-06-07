@@ -15,9 +15,23 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+ 
+# include <sys/ipc.h>
+# include <sys/shm.h>
+#include <semaphore.h>
+
+typedef struct XMem {
+	key_t key ;
+	int shmid ;
+	char buf [1];
+} XMem ;
+
+void * xmalloc ( key_t key , const size_t size );
+void xfree(void * address);
 
 
 void syserr(char *prog, char *msg);
+void syserr_ext(char *prog, char *msg, int line);
 
 struct list{
     char* value;
