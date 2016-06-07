@@ -247,7 +247,7 @@ int main(int argc, char *argv[]){
     free(free_childs);
     free(results); 
 
-	
+	printf("	finito: %i\n ", id_number);
     return 0;
 }
 
