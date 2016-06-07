@@ -259,12 +259,12 @@ int main(int argc, char *argv[]){
 
 void parent()
 {
-	printf("> parent called\n");
+	printf("> padre called\n");
 }
 
 void child()
 {
-	printf("child %i called\n", id_number);
+	printf("figlio %i\n", id_number);
 }
 
 
