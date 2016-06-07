@@ -162,7 +162,8 @@ int main(int argc, char *argv[]){
     unsigned short sem_init[2] = {1,1};
     unsigned short sem_out_test[2];
  	//struct sembuf * sops =  ( struct sembuf *) malloc ( sizeof ( struct sembuf )); 
- 	if (( semid = semget (ftok(argv[0], 's') , NPROC , IPC_CREAT | IPC_EXCL | 0666)) == -1) {
+ 	int num_semafori = 2;
+ 	if (( semid = semget (ftok(argv[0], 's') , num_semafori, IPC_CREAT | IPC_EXCL | 0666)) == -1) {
 		syserr_ext (argv[0], " semget " , __LINE__);
 	}
 
