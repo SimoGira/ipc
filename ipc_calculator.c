@@ -128,6 +128,7 @@ int main(int argc, char *argv[]){
     
     operations = (struct operation*)malloc(sizeof(struct operation)*n_operations);
     
+    
 	// take first element of this list as the first operation
     struct list* list = first_element->next;
     i = 0; 
@@ -142,7 +143,7 @@ int main(int argc, char *argv[]){
         if(val1 == NULL || op == NULL || val2 == NULL)
      		syserr (argv[0], "Wrong operation format");
      		
-       	//printf("process %s: \n	operation: %s %s %s\n",id, val1, op, val2);
+       	printf("process %s: \n	operation: %s %s %s\n",id, val1, op, val2);
         
         operations[i].id = atoi(id);
         operations[i].val1 = atoi(val1);
