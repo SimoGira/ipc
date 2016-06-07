@@ -258,9 +258,58 @@ void parent()
 }
 
 void child()
-{  
-	
-	
+{
+    while(true)
+    {
+        // si mette in attesa di essere chiamato per il calcolo
+        sem_p(sem_wait_data);
+        
+        // legge i dati
+        sem_p(sem_computing, id);
+        
+        int val1 = current_operation.val1;
+        int val2 = current_operation.val2;
+        char op = current_operation.operator;
+        
+        sem_v(sem_computing, id);
+        
+        // termina col comando k
+        if(cmd == 'k')
+            exit(0);
+        
+        int res;
+        
+        free_child[i] = false;
+        
+        switch (op) {
+            case '+':
+                res = val1 + val2;
+                break;
+            case '-':
+                res = val1 - val2;
+                break;
+            case '*':
+                res = val1 * val2;
+                break;
+            case '/':
+                res = val1 / val2;
+                break;
+                
+            default:
+                break;
+        }
+        
+        // avvisa di aver terminato il calcolo
+        V(calcolo_in_corso[i]) // calcolo terminato
+        
+        // attende che il padre richieda i dati
+        P(richiesta_dati[i])
+        
+        scrivi_risultato_calcolo()
+        
+        // dice al padre che i dati sono pronti per essere letti
+        V(dati_pronti)	
+    }
 	printf("figlio %i terminato\n", id_number);
 }
 
