@@ -39,6 +39,13 @@ void list_print(struct list *this){
         list_print(this->next);
     }
 }
+ 
+void list_free(struct list *this){
+    if (this != NULL) { 
+        list_free(this->next);
+        free(this);
+    }
+}
 
 void syserr(char *prog, char *msg){
     fprintf(stderr, "%s - \e[91merror\e[0m: %s\n",prog, msg);

@@ -26,8 +26,10 @@ struct list{
  
 struct list *list_create(char* value);
 struct list *list_add(char* value, struct list *next);
+void list_free(struct list *first_element);
 void list_print(struct list *this);
 
 
 
 #endif /* mylib_h */
+
