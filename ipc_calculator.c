@@ -286,6 +286,7 @@ void parent()
 			//aspetta che i dati siano pronti da leggere
     		sem_p(sem_parent, 1);
     		
+    		printf("Getting result %d, %d\n", current_result->id, current_result->val);
     		results[current_result->id] = current_result->val;
     	}
 
