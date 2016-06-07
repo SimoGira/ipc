@@ -143,17 +143,15 @@ int main(int argc, char *argv[]){
         if(val1 == NULL || op == NULL || val2 == NULL)
      		syserr (argv[0], "Wrong operation format");
      		
-       	printf("process %s: \n	operation: %s %s %s\n",id, val1, op, val2);
+       	//printf("process %s: \n	operation: %s %s %s\n",id, val1, op, val2);
         
         operations[i].id = atoi(id);
         operations[i].val1 = atoi(val1);
         operations[i].val2 = atoi(val2);
         operations[i].operator = op[0];
         i++;
-        
-    	printf(" a.\n");
-        list = list->next;
-     	printf(" b.\n");
+         
+        list = list->next; 
     }  
      
     // free the lines memory
