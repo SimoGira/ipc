@@ -301,6 +301,40 @@ void parent()
 		sem_v(sem_wait_data, i);
     }
         
+    
+	for(int i = 0; i < NPROC; i++)
+    {
+		if(!free_child[i])
+		{
+			// attende che abbia finito il calcolo
+    		sem_p(sem_computing, i);
+    		
+			// richiede eventuali dati precedenti
+    		sem_v(sem_request_result, i);
+    		
+			//aspetta che i dati siano pronti da leggere
+    		sem_p(sem_parent, 1);
+    		
+    		results[current_result->id] = current_result->val;
+		}
+	
+		//termina processo 
+		sem_p(sem_parent, 0);
+		current_operation->operator = 'k';
+		sem_v(sem_parent, 0);
+				
+		// libera il figlio bloccato
+		sem_v(sem_wait_data, i);
+	}
+
+	printf("printing results \n");
+	for(int i = 0; i < n_operations; i++)
+    {
+    	printf("result: %i\n", results[i]);
+    }
+	 
+
+
     xfree(current_operation);
     xfree(current_result);
     xfree(free_child);
