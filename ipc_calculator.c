@@ -149,10 +149,8 @@ int main(int argc, char *argv[]){
         operations[i].val2 = atoi(val2);
         operations[i].operator = op[0];
         i++;
-        
-     printf(" a.\n");
-        list = list->next;
-     printf(" b.\n");
+         
+        list = list->next; 
     }  
      
     // free the lines memory
