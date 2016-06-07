@@ -39,6 +39,12 @@ union semun
 }; 
 #endif
 
+
+int sem_parent;
+int sem_request_result;
+int sem_computing;
+int sem_wait_data;
+    
 struct operation{
 	int id;
     int val1;
@@ -174,24 +180,20 @@ int main(int argc, char *argv[]){
   
     // semafori per i figli
     
-    int sem_computing;
     if (( sem_computing = semget (ftok(argv[0], 'a') , NPROC, IPC_CREAT | IPC_EXCL | 0666)) == -1) {
 		syserr_ext (argv[0], " semget " , __LINE__);
 	}
 	
-    int sem_wait_data;
     if (( sem_wait_data = semget (ftok(argv[0], 'b') , NPROC, IPC_CREAT | IPC_EXCL | 0666)) == -1) {
 		syserr_ext (argv[0], " semget " , __LINE__);
 	}
 	
-    int sem_request_result;
     if (( sem_request_result = semget (ftok(argv[0], 'c') , NPROC, IPC_CREAT | IPC_EXCL | 0666)) == -1) {
 		syserr_ext (argv[0], " semget " , __LINE__);
 	}
 	
 	//semafori per il padre
 	// 0: mutex   1: result_ready
-	int sem_parent;
 	if (( sem_parent = semget (ftok(argv[0], 'd') , 2, IPC_CREAT | IPC_EXCL | 0666)) == -1) {
 		syserr_ext (argv[0], " semget " , __LINE__);
 	}
@@ -248,8 +250,10 @@ void parent()
 {
 	printf("> padre called\n"); 
     
-    sleep(1);
+    int op_index = 0;
     
+    
+        
     xfree(current_operation);
     xfree(current_result);
     xfree(free_child);
