@@ -196,19 +196,11 @@ int main(int argc, char *argv[]){
 		syserr_ext (argv[0], " semget " , __LINE__);
 	}
 	 
-    unsigned short sem_init[2] = {1, 0};
-    unsigned short sem_out_test[2];
-    
+    unsigned short sem_init[2] = {1, 0};  
     union semun arg; 
 	arg.array = sem_init;
 	semctl(sem_parent, 2, SETALL, arg);
- 
- 	// TEST
-	arg.array = sem_out_test;
-	semctl(sem_parent, 2, GETALL, arg); 
-	printf("Semaphore init values: %d %d\n",sem_out_test[0], sem_out_test[1]);
-
-
+  
 	// memoria condivisa
 	current_operation = (struct operation*) xmalloc(SMD_OP, sizeof(struct operation));	
 	current_result = (int*) xmalloc(SMD_RES, sizeof(int));	 
