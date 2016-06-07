@@ -62,7 +62,7 @@ const int SMD_STATUS = 103;
 struct operation* current_operation;
 int * current_result; 
 int * childs_pid; 
-bool * childs_status;
+bool * free_child;
 
 struct sembuf sops;
 
@@ -204,11 +204,11 @@ int main(int argc, char *argv[]){
 	// memoria condivisa
 	current_operation = (struct operation*) xmalloc(SMD_OP, sizeof(struct operation));	
 	current_result = (int*) xmalloc(SMD_RES, sizeof(int));	 
-    childs_status = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);
+    free_child = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);
     
     //liberi
     for(int i = 0; i < NPROC; i++)
-    	childs_status[i] = true;
+    	free_child[i] = true;
     
     pid_t pid; 
     for (int i = 0; i < NPROC; i++)
@@ -252,7 +252,7 @@ void parent()
     
     xfree(current_operation);
     xfree(current_result);
-    xfree(childs_status);
+    xfree(free_child);
     free(childs_pid); 
 	printf("padre terminato\n");
 }
