@@ -314,38 +314,41 @@ void child()
     
     while(true)
     {
-        free_child[i] = true;
+        free_child[id_number] = true;
         
         // si mette in attesa di essere chiamato per il calcolo
         sem_p(sem_wait_data, id_number);
         
         // legge i dati
-        sem_p(sem_computing, id_number);
+        
+        sem_p(sem_parent, 0);
         int val1 = current_operation->val1;
         int val2 = current_operation->val2;
         char op = current_operation->operator;
-        sem_v(sem_computing, id_number);
+        sem_v(sem_parent, 0);
         
         // termina col comando k
-        if(cmd == 'k')
+        if(op == 'k'){
             exit(0);
+        }
         
-        free_child[i] = false;
+        free_child[id_number] = false;
         
+        // calcola
         res = process_operation(val1, val2, op);
-        current_result.val = res;
-        current_result.id = id_number;
         
         // avvisa di aver terminato il calcolo
-        V(calcolo_in_corso[i]) // calcolo terminato
+        sem_v(sem_computing, id_number); // calcolo terminato
         
         // attende che il padre richieda i dati
-        P(richiesta_dati[i])
+        sem_p(sem_request_result, id_number);
         
-        scrivi_risultato_calcolo()
+        // scrivi risultato calcolo
+        current_result->val = res;
+        current_result->id = id_number;
         
         // dice al padre che i dati sono pronti per essere letti
-        V(dati_pronti)	
+        sem_v(sem_parent, 1);
     }
 	printf("figlio %i terminato\n", id_number);
 }

@@ -19,21 +19,22 @@
 int process_operation(int val1, int val2, char op){
     switch (op) {
         case '+':
-            return = val1 + val2;
+            return val1 + val2;
             break;
         case '-':
-            return = val1 - val2;
+            return val1 - val2;
             break;
         case '*':
-            return = val1 * val2;
+            return val1 * val2;
             break;
         case '/':
-            return = val1 / val2;
+            return val1 / val2;
             break;
         default:
-            return -1; // not valid operator
+            syserr("process operation: ", "not valid operator");
             break;
     }
+    return -1;
 }
 
 //shared memory
