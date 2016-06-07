@@ -56,7 +56,7 @@ struct operation{
 struct result {
 	int id;
 	int val;
-}
+};
 
 struct operation* operations;
 int *childs_pid; 
@@ -68,7 +68,7 @@ int NPROC = 0;
 void parent();
 void child();
 
-
+int* results;
 const int SMD_OP = 101;
 const int SMD_RES = 102;
 const int SMD_STATUS = 103;
@@ -151,6 +151,7 @@ int main(int argc, char *argv[]){
     NPROC = atoi(first_element->value);         // number of process to create
     
     operations = (struct operation*)malloc(sizeof(struct operation)*n_operations);
+    results = (int*) malloc(sizeof(int) * n_operations);
     
     
 	// take first element of this list as the first operation
@@ -265,29 +266,40 @@ int get_first_free_child()
 void parent()
 {
 	printf("> padre called\n"); 
-
-    
-    int op_index = 0;
-    
-
      
-    for(int j = 0; j < n_operations; j++)
+    for(int op_id = 0; op_id < n_operations; op_id++)
     {
-    	int i = operations[j].id;
+		// preleva l'id del figlio da liberare
+    	int i = operations[op_id].id;
     	if(i == 0) 
     		i = get_first_free_child();
     	
+		//se il figlio è occupato
     	if(!free_child[i])
     	{
+			// attende che abbia finito il calcolo
     		sem_p(sem_computing, i);
     		
+			// richiede eventuali dati precedenti
     		sem_v(sem_request_result, i);
     		
+			//aspetta che i dati siano pronti da leggere
     		sem_p(sem_parent, 1);
+    		
+    		results[current_result->id] = current_result->val;
     	}
-    }
 
-    
+		// inserisce i dati della prossima operazione
+		sem_p(sem_parent, 0);
+		current_operation->id = op_id;
+		current_operation->val1 = operations[op_id].val1;
+		current_operation->val1 = operations[op_id].val2;
+		current_operation->operator = operations[op_id].operator;
+		sem_v(sem_parent, 0);
+				
+		// libera il figlio bloccato
+		sem_v(sem_wait_data, i);
+    }
         
     xfree(current_operation);
     xfree(current_result);
