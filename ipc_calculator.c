@@ -66,7 +66,7 @@ bool * childs_status;
 
 struct sembuf sops;
 
-void SemV(int semid, int num)
+void sem_v(int semid, int num)
 {
 	sops.sem_op = 1;
 	sops.sem_flg = SEM_UNDO;
@@ -74,7 +74,7 @@ void SemV(int semid, int num)
 	semop (semid, &sops , 1);
 }
 
-void SemP(int semid, int num)
+void sem_p(int semid, int num)
 { 
 	sops.sem_op = -1;
 	sops.sem_flg = SEM_UNDO;
