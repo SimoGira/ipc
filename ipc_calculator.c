@@ -60,8 +60,9 @@ const int SMD_OP = 101;
 const int SMD_RES = 102;
 const int SMD_STATUS = 103;
 struct operation* current_operation;
-int *results;
-bool *child_status;
+int * current_result; 
+int * childs_pid; 
+bool * childs_status;
 
 
 int main(int argc, char *argv[]){
@@ -160,9 +161,8 @@ int main(int argc, char *argv[]){
     int semid;
     unsigned short sem_init[2] = {1,1};
     unsigned short sem_out_test[2];
- 	//struct sembuf * sops =  ( struct sembuf *) malloc ( sizeof ( struct sembuf ));
- 	int num_semafori = 2;
- 	if (( semid = semget (ftok(argv[0], 's') , num_semafori , IPC_CREAT | IPC_EXCL | 0666)) == -1) {
+ 	//struct sembuf * sops =  ( struct sembuf *) malloc ( sizeof ( struct sembuf )); 
+ 	if (( semid = semget (ftok(argv[0], 's') , NPROC , IPC_CREAT | IPC_EXCL | 0666)) == -1) {
 		syserr_ext (argv[0], " semget " , __LINE__);
 	}
 
@@ -186,8 +186,8 @@ int main(int argc, char *argv[]){
     */
 	 
 	current_operation = (struct operation*) xmalloc(SMD_OP, sizeof(struct operation));	
-    results = (int*) xmalloc(SMD_RES, sizeof (int*) * n_operations);
-    child_status = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);
+	current_result = (int*) xmalloc(SMD_RES, sizeof(int));	 
+    childs_status = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);
     
     pid_t pid; 
     for (int i = 0; i < NPROC; i++)
@@ -226,17 +226,15 @@ void parent()
     sleep(1);
     
     xfree(current_operation);
-    xfree(results);
-    xfree(child_status);
+    xfree(current_result);
+    xfree(childs_status);
     free(childs_pid); 
 	printf("padre terminato\n");
 }
 
 void child()
-{ 
-	current_operation = (struct operation*) xattach(SMD_OP, sizeof(struct operation));
-    results = (int*) xattach(SMD_RES, sizeof (int*) * n_operations);
-    child_status = (bool*) xattach(SMD_STATUS, sizeof (bool*) * NPROC);
+{  
+	//can use shared memory
 	
 	printf("figlio %i terminato\n", id_number);
 }
