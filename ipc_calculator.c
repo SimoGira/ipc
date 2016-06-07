@@ -32,9 +32,7 @@
 struct sembuf P, V;
 
 
-#if (defined(__GNU_LIBRARY__) && !defined(_SEM_SEMUN_UNDEFINED)) \
-    || defined(__FreeBSD__)  
-#else 
+#ifndef __APPLE__
 union semun
 {
 	int val;                // value for SETVAL
