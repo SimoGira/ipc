@@ -276,8 +276,9 @@ int get_first_free_child()
 
 void parent()
 {
-	printf("> padre called\n"); 
- 	sem_p(sem_parent, 1)
+	printf("PARENT: attendi\n"); 
+ 	sem_p(sem_parent, 1);
+ 	
     for(int op_id = 0; op_id < n_operations; op_id++)
     {
     
