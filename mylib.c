@@ -16,19 +16,19 @@
 
 #include "mylib.h"
 
-int process_operation(int val1, int val2, char op){
+float process_operation(int val1, int val2, char op){
     switch (op) {
         case '+':
-            return val1 + val2;
+            return (float)(val1 + val2);
             break;
         case '-':
-            return val1 - val2;
+            return (float)(val1 - val2);
             break;
         case '*':
-            return val1 * val2;
+            return (float)(val1 * val2);
             break;
         case '/':
-            return val1 / val2;
+            return (float)val1 / (float)(val2);
             break;
         default:
             syserr("process operation: ", "not valid operator");

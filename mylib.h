@@ -44,7 +44,7 @@ struct list *list_add(char* value, struct list *next);
 void list_free(struct list *first_element);
 void list_print(struct list *this);
 
-int process_operation(int val1, int val2, char op);
+float process_operation(int val1, int val2, char op);
 
 #endif /* mylib_h */
 

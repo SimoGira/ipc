@@ -39,7 +39,6 @@ union semun
 }; 
 #endif
 
-
 int sem_parent;
 int sem_request_result;
 int sem_computing;
@@ -52,10 +51,9 @@ struct operation{
     char operator; 
 };
 
-
 struct result {
 	int id;
-	int val;
+	float val;
 };
 
 struct operation* operations;
@@ -69,7 +67,7 @@ int* childs_started;
 void parent();
 void child();
 
-int* results;
+float* results;
 const int SMD_OP = 101;
 const int SMD_RES = 102;
 const int SMD_STATUS = 103;
@@ -155,7 +153,7 @@ int main(int argc, char *argv[]){
     NPROC = atoi(first_element->value);         // number of process to create
     
     operations = (struct operation*)malloc(sizeof(struct operation)*n_operations);
-    results = (int*) malloc(sizeof(int) * n_operations);
+    results = (float*) malloc(sizeof(float) * n_operations);
     
     
 	// take first element of this list as the first operation
@@ -195,23 +193,22 @@ int main(int argc, char *argv[]){
     arg.val = 0;
         
     
-    // per i figli
-    
+    // per i figli 
     if (( sem_computing = semget (ftok(argv[0], 'a') , NPROC, IPC_CREAT | 0777)) == -1) 
 		syserr_ext (argv[0], " semget " , __LINE__); 
-	for(int i = 0; i < NPROC; i++)
+	for(i = 0; i < NPROC; i++)
     if (semctl(sem_computing, i, SETVAL, arg) == -1) 
 		syserr_ext (argv[0], " semctl " , __LINE__); 
 	
     if (( sem_wait_data = semget (ftok(argv[0], 'b') , NPROC, IPC_CREAT | 0777)) == -1) 
 		syserr_ext (argv[0], " semget " , __LINE__);
-	for(int i = 0; i < NPROC; i++)
+	for(i = 0; i < NPROC; i++)
 	if (semctl(sem_wait_data, i, SETVAL, arg) == -1) 
 		syserr_ext (argv[0], " semctl " , __LINE__); 
 	
     if (( sem_request_result = semget (ftok(argv[0], 'c') , NPROC, IPC_CREAT  | 0777)) == -1)  
 		syserr_ext (argv[0], " semget " , __LINE__);
-	for(int i = 0; i < NPROC; i++)
+	for(i = 0; i < NPROC; i++)
 	if (semctl(sem_request_result, i, SETVAL, arg) == -1) 
 		syserr_ext (argv[0], " semctl " , __LINE__); 
 	
@@ -228,11 +225,14 @@ int main(int argc, char *argv[]){
 	current_operation = (struct operation*) xmalloc(SMD_OP, sizeof(struct operation));	
 	current_result = (struct result*) xmalloc(SMD_RES, sizeof(struct result)); 
     free_child = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);	 
+    for(i = 0; i < NPROC; i++)
+    	free_child[i] = true;
+    	
 	childs_started = (int*) xmalloc(SMD_STARTED, sizeof(int));
 	*childs_started = 0;	
      
     pid_t pid; 
-    for (int i = 0; i < NPROC; i++)
+    for (i = 0; i < NPROC; i++)
     {
         pid = fork();
         if (pid < 0) {
@@ -291,6 +291,7 @@ void parent()
     	if(i == -1) 
     		i = get_first_free_child();
     	
+    	printf("PARENT: child %i is free?:  %s \n", i, free_child[i]?"true":"false");
 		//se il figlio è occupato
     	if(!free_child[i])
     	{
@@ -306,7 +307,7 @@ void parent()
 			printf("PARENT: aspetta che i dati di (%i) siano pronti da leggere \n", i);
     		sem_p(sem_parent, 1);
     		
-			printf("results[%i] = %i \n", current_result->id, current_result->val);
+			printf("results[%i] = %f \n", current_result->id, current_result->val);
     		results[current_result->id] = current_result->val;
     	}
 
@@ -346,7 +347,7 @@ void parent()
 			printf("PARENT: aspetta che i dati siano pronti da leggere  %i \n", i);
     		sem_p(sem_parent, 1);
     		
-			printf("results[%i] = %i \n", current_result->id, current_result->val);
+			printf("results[%i] = %f \n", current_result->id, current_result->val);
     		results[current_result->id] = current_result->val;
 		}
 	
@@ -366,7 +367,7 @@ void parent()
 	printf("PARENT: printing results \n");
 	for(int i = 0; i < n_operations; i++)
     {
-    	printf("result: %i\n", results[i]);
+    	printf("result: %f\n", results[i]);
     }
     
     xfree(childs_started);
