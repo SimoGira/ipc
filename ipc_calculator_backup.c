@@ -277,97 +277,97 @@ int get_first_free_child()
 
 void parent()
 {
-	 
+	printf("PARENT: attendi\n"); 
  	sem_p(sem_parent, 1);
-	 
+	printf("PARENT: sbloccato\n"); 
  	
     for(int op_id = 0; op_id < n_operations; op_id++)
     {
     
-	
+		printf("PARENT: operazione %i: %i %c %i \n",operations[op_id].id,operations[op_id].val1,operations[op_id].operator, operations[op_id].val2);
 		
 		// preleva l'id del figlio da liberare
     	int i = operations[op_id].id;
     	if(i == -1) 
     		i = get_first_free_child();
     	
-    
+    	printf("PARENT: child %i is free?:  %s \n", i, free_child[i]?"true":"false");
 		//se il figlio è occupato
     	if(!free_child[i])
     	{
 			// attende che abbia finito il calcolo
-	
+			printf("PARENT: attende (%i) che abbia finito il calcolo \n", i);
     		sem_p(sem_computing, i);
     		
 			// richiede eventuali dati precedenti
-	
+			printf("PARENT: richiede eventuali dati precedenti a (%i) \n", i);
     		sem_v(sem_request_result, i);
     		
 			//aspetta che i dati siano pronti da leggere
-	
+			printf("PARENT: aspetta che i dati di (%i) siano pronti da leggere \n", i);
     		sem_p(sem_parent, 1);
     		
-	
+			printf("results[%i] = %f \n", current_result->id, current_result->val);
     		results[current_result->id] = current_result->val;
     	}
 
 		// inserisce i dati della prossima operazione
-	 
+		printf("PARENT: inserisce i dati della prossima operazione \n"); 
 		current_operation->id = op_id;
 		current_operation->val1 = operations[op_id].val1;
 		current_operation->val2 = operations[op_id].val2;
 		current_operation->operator = operations[op_id].operator;
 				
 		// libera il figlio bloccato
-	
+		printf("PARENT: libera il figlio bloccato %i\n", i);
 		sem_v(sem_wait_data, i);
 		
 		// aspetta che il figlio li abbia letti
-	
+		printf("PARENT: spetta che il figlio ( %i ) li abbia letti\n", i);
 		sem_p(sem_parent, 2);
     }
         
-    
+     printf("============ LEGGO I DATI COMPUTATI ===============\n");
     
 	for(int i = 0; i < NPROC; i++)
     {
     	
-    
+    	printf("PARENT: child %i is free?:  %s \n", i, free_child[i]?"true":"false");
 		if(!free_child[i])
 		{
 			// attende che abbia finito il calcolo
-	
+			printf("PARENT: attende che abbia finito il calcolo %i  \n",i );
     		sem_p(sem_computing, i);
     		
 			// richiede eventuali dati precedenti
-	
+			printf("PARENT: richiede eventuali dati precedenti %i  \n", i);
     		sem_v(sem_request_result, i);
     		
 			//aspetta che i dati siano pronti da leggere
-	
+			printf("PARENT: aspetta che i dati siano pronti da leggere  %i \n", i);
     		sem_p(sem_parent, 1);
     		
-	
+			printf("results[%i] = %f \n", current_result->id, current_result->val);
     		results[current_result->id] = current_result->val;
 		}
 	
 		//termina processo 
-	 
+		printf("PARENT: termina processo figlio %i \n", i); 
 		current_operation->operator = 'k';
 				
 		// libera il figlio bloccato
-	
+		printf("PARENT: libera il figlio bloccato %i \n", i);
 		sem_v(sem_wait_data, i);
 		
 		// aspetta che il figlio abbia letto
-	
+		printf("PARENT:aspetta che il figlio abbia letto %i \n", i);
 		sem_p(sem_parent, 2);
 	}
 
-	
+	printf("PARENT: printing results \n");
 	for(int i = 0; i < n_operations; i++)
     {
-    	
+    	printf("result: %f\n", results[i]);
     }
     
     xfree(childs_started);
@@ -375,7 +375,7 @@ void parent()
     xfree(current_result);
     xfree(free_child);
     free(childs_pid); 
-	
+	printf("padre terminato\n");
 }
 
 void child()
@@ -384,7 +384,7 @@ void child()
     
   	sem_p(sem_parent, 0); 
     (*childs_started)++;
-    
+    printf("%i / %i\n", *childs_started, NPROC);
     
     if(*childs_started == NPROC)
     	sem_v(sem_parent, 1);
@@ -396,7 +396,7 @@ void child()
         free_child[id_number] = true;
         
         // si mette in attesa di essere chiamato per il calcolo
-      
+        printf("%i) si mette in attesa di essere chiamato per il calcolo\n", id_number);
         sem_p(sem_wait_data, id_number);
         
         
@@ -404,20 +404,20 @@ void child()
         
         
         // legge i dati
-      
+        printf("%i) legge i dati\n", id_number);
         int val1 = current_operation->val1;
         int val2 = current_operation->val2;
         char op = current_operation->operator; 
         int op_id = current_operation->id;
         
         // avvisa che ho finito di leggere
-      
+        printf("%i) avvisa che ho finito di leggere %i %c %i\n", id_number, val1, op, val2);
         sem_v(sem_parent, 2);
         
         
         // termina col comando k
         if(op == 'k'){
-     
+        	printf("%i) termina\n", id_number);
             exit(0);
         }
         
@@ -426,22 +426,23 @@ void child()
         res = process_operation(val1, val2, op);
         
         // avvisa di aver terminato il calcolo
-     
+        printf("%i) avvisa di aver terminato il calcolo\n", id_number);
         sem_v(sem_computing, id_number); // calcolo terminato
         
         // attende che il padre richieda i dati
-     
+        printf("%i) attende che il padre richieda i dati\n", id_number);
         sem_p(sem_request_result, id_number);
         
         // scrivi risultato calcolo
-     
+        printf("%i) scrivi risultato calcolo\n", id_number);
         current_result->val = res;
         current_result->id = op_id;
         
         // dice al padre che i dati sono pronti per essere letti
-     
+        printf("%i) dice al padre che i dati sono pronti per essere letti\n", id_number);
         sem_v(sem_parent, 1);
     }
+	printf("figlio %i terminato\n", id_number);
 }
 
 
