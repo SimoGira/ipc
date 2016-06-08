@@ -1,4 +1,5 @@
 #!/bin/bash
+./free_ipcs
 
 if [[ $1 == "compile" || $1 == "c" ]]; then
 	rm -rf a.out
