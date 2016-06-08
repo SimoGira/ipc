@@ -401,11 +401,13 @@ void child()
         
         free_child[id_number] = false;
         
+        
         // legge i dati
         printf("%i) legge i dati\n", id_number);
         int val1 = current_operation->val1;
         int val2 = current_operation->val2;
         char op = current_operation->operator; 
+        int op_id = current_operation->id;
         printf("%i)  avvisa che ho finito di leggere %i %c %i\n", id_number, val1, op, val2);
         
         // avvisa che ho finito di leggere
@@ -433,7 +435,7 @@ void child()
         // scrivi risultato calcolo
         printf("%i) scrivi risultato calcolo\n", id_number);
         current_result->val = res;
-        current_result->id = id_number;
+        current_result->id = op_id;
         
         // dice al padre che i dati sono pronti per essere letti
         printf("%i) risultato pronto\n", id_number);
