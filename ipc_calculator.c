@@ -64,6 +64,7 @@ bool * free_child;
 int id_number = 0;
 int n_operations = -1;
 int NPROC = 0;
+int* childs_started;
 
 void parent();
 void child();
@@ -72,6 +73,7 @@ int* results;
 const int SMD_OP = 101;
 const int SMD_RES = 102;
 const int SMD_STATUS = 103;
+const int SMD_STARTED = 104;
 
 struct operation* current_operation;
 struct result* current_result; 
@@ -80,7 +82,7 @@ struct sembuf sops;
 
 void sem_v(int semid, int num)
 {
-	printf("<%i>	V  %i[%i]\n", id_number, semid, num);
+	//printf("<%i>	V  %i[%i]\n", id_number, semid, num);
 	sops.sem_op = 1;
 	sops.sem_flg = SEM_UNDO;
 	sops.sem_num = num;
@@ -90,7 +92,7 @@ void sem_v(int semid, int num)
 
 void sem_p(int semid, int num)
 { 
-	printf("<%i>	P  %i[%i]\n", id_number, semid, num);
+	//printf("<%i>	P  %i[%i]\n", id_number, semid, num);
 	sops.sem_op = -1;
 	sops.sem_flg = SEM_UNDO;
 	sops.sem_num = num;
@@ -216,19 +218,20 @@ int main(int argc, char *argv[]){
 		syserr_ext (argv[0], " semctl " , __LINE__); 
 	
 	// per il padre
-	// 0: mutex   1: result_ready
-	if (( sem_parent = semget (ftok(argv[0], 'd') , 2, IPC_CREAT | 0777)) == -1) {
+	// 0: mutex   1: result_ready  2: data_read
+	if (( sem_parent = semget (ftok(argv[0], 'd') , 3, IPC_CREAT | 0777)) == -1) {
 		syserr_ext (argv[0], " semget " , __LINE__);
 	} 
-    unsigned short sem_init[2] = {1, 0};
-	arg.array = sem_init;
-  
-	semctl(sem_parent, 2, SETALL, arg);
+    unsigned short sem_init[3] = {1, 0, 0};
+	arg.array = sem_init; 
+	semctl(sem_parent, 3, SETALL, arg);
   
 	// memoria condivisa
 	current_operation = (struct operation*) xmalloc(SMD_OP, sizeof(struct operation));	
-	current_result = (struct result*) xmalloc(SMD_RES, sizeof(struct result));	 
-    free_child = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);
+	current_result = (struct result*) xmalloc(SMD_RES, sizeof(struct result)); 
+    free_child = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);	 
+	childs_started = (int*) xmalloc(SMD_STARTED, sizeof(int));
+	*childs_started = 0;	
      
     pid_t pid; 
     for (int i = 0; i < NPROC; i++)
@@ -278,6 +281,7 @@ void parent()
 {
 	printf("PARENT: attendi\n"); 
  	sem_p(sem_parent, 1);
+	printf("PARENT: sbloccato\n"); 
  	
     for(int op_id = 0; op_id < n_operations; op_id++)
     {
@@ -309,17 +313,19 @@ void parent()
     	}
 
 		// inserisce i dati della prossima operazione
-		printf("PARENT: inserisce i dati della prossima operazione \n");
-		sem_p(sem_parent, 0);
+		printf("PARENT: inserisce i dati della prossima operazione \n"); 
 		current_operation->id = op_id;
 		current_operation->val1 = operations[op_id].val1;
-		current_operation->val1 = operations[op_id].val2;
+		current_operation->val2 = operations[op_id].val2;
 		current_operation->operator = operations[op_id].operator;
-		sem_v(sem_parent, 0);
 				
 		// libera il figlio bloccato
-		printf("PARENT: libera il figlio bloccato \n");
+		printf("PARENT: libera il figlio bloccato %i\n", i);
 		sem_v(sem_wait_data, i);
+		
+		// aspetta che il figlio li abbia letti
+		printf("PARENT: spetta che il figlio li abbia letti\n");
+		sem_p(sem_parent, 2);
     }
         
     
@@ -344,14 +350,15 @@ void parent()
 		}
 	
 		//termina processo 
-		printf("PARENT: termina processo figlio \n");
-		sem_p(sem_parent, 0);
+		printf("PARENT: termina processo figlio \n"); 
 		current_operation->operator = 'k';
-		sem_v(sem_parent, 0);
 				
 		// libera il figlio bloccato
 		printf("PARENT: libera il figlio bloccato \n");
 		sem_v(sem_wait_data, i);
+		  
+		// aspetta che il figlio abbia letto
+		sem_p(sem_parent, 2);
 	}
 
 	printf("PARENT: printing results \n");
@@ -359,8 +366,10 @@ void parent()
     {
     	printf("result: %i\n", results[i]);
     }
-	  
+	 
+	 wait(0);
 
+    xfree(childs_started);
     xfree(current_operation);
     xfree(current_result);
     xfree(free_child);
@@ -368,14 +377,17 @@ void parent()
 	printf("padre terminato\n");
 }
 
-int childs_started = 0;
 void child()
 {
     int res;
     
-  	sem_p(sem_parent, 0);
-    if(++childs_started == NPROC)
+  	sem_p(sem_parent, 0); 
+    (*childs_started)++;
+    printf("%i / %i\n", *childs_started, NPROC);
+    
+    if(*childs_started == NPROC)
     	sem_v(sem_parent, 1);
+	
     sem_v(sem_parent, 0);
     
     while(true)
@@ -386,15 +398,18 @@ void child()
         printf("%i) si mette in attesa di essere chiamato per il calcolo\n", id_number);
         sem_p(sem_wait_data, id_number);
         
+        
+        free_child[id_number] = false;
+        
         // legge i dati
         printf("%i) legge i dati\n", id_number);
-        sem_p(sem_parent, 0);
         int val1 = current_operation->val1;
         int val2 = current_operation->val2;
-        char op = current_operation->operator;
+        char op = current_operation->operator; 
+        printf("%i)  avvisa che ho finito di leggere %i %c %i\n", id_number, val1, op, val2);
         
-        printf("%i)  %i %c %i\n", id_number, val1, op, val2);
-        sem_v(sem_parent, 0);
+        // avvisa che ho finito di leggere
+        sem_v(sem_parent, 2);
         
         
         // termina col comando k
@@ -402,7 +417,6 @@ void child()
             exit(0);
         }
         
-        free_child[id_number] = false;
         
         // calcola
         printf("%i) calcola\n", id_number);
