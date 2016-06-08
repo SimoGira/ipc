@@ -369,7 +369,7 @@ void parent()
 	
 	for(i = 0; i < n_operations; i++)
     {
-    	printf("result: %.2f\n", results[i]);    	
+    	printf("result: %f\n", results[i]);    	
     }
     
     xfree(childs_started);
