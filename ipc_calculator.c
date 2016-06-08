@@ -289,7 +289,7 @@ void parent()
 		
 		// preleva l'id del figlio da liberare
     	int i = operations[op_id].id;
-    	if(i == 0) 
+    	if(i == -1) 
     		i = get_first_free_child();
     	
 		//se il figlio è occupato
