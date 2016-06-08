@@ -241,7 +241,7 @@ int main(int argc, char *argv[]){
         if (pid < 0) {
             syserr("fork()", "cannot create a new process");
         } else if (pid == 0) {      // code execute from child
-            id_number = i+1;        // assign id number to process (utile per identificare poi il processo a cui far eseguire l'operazione)
+            id_number = i;        // assign id number to process (utile per identificare poi il processo a cui far eseguire l'operazione)
             child();
             break;
         } else {        
