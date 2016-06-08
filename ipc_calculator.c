@@ -220,7 +220,7 @@ int main(int argc, char *argv[]){
 	if (( sem_parent = semget (ftok(argv[0], 'd') , 2, IPC_CREAT | 0777)) == -1) {
 		syserr_ext (argv[0], " semget " , __LINE__);
 	} 
-    unsigned short sem_init[2] = {0, 0};
+    unsigned short sem_init[2] = {1, 0};
 	arg.array = sem_init;
   
 	semctl(sem_parent, 2, SETALL, arg);
@@ -229,11 +229,7 @@ int main(int argc, char *argv[]){
 	current_operation = (struct operation*) xmalloc(SMD_OP, sizeof(struct operation));	
 	current_result = (struct result*) xmalloc(SMD_RES, sizeof(struct result));	 
     free_child = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);
-    
-    //liberi
-    for(int i = 0; i < NPROC; i++)
-    	free_child[i] = true;
-    
+     
     pid_t pid; 
     for (int i = 0; i < NPROC; i++)
     {
@@ -281,7 +277,7 @@ int get_first_free_child()
 void parent()
 {
 	printf("> padre called\n"); 
-     
+ 	sem_p(sem_parent, 1)
     for(int op_id = 0; op_id < n_operations; op_id++)
     {
     
@@ -371,9 +367,15 @@ void parent()
 	printf("padre terminato\n");
 }
 
+int childs_started = 0;
 void child()
 {
     int res;
+    
+  	sem_p(sem_parent, 0);
+    if(++childs_started == NPROC)
+    	sem_v(sem_parent, 1);
+    sem_v(sem_parent, 0);
     
     while(true)
     {
