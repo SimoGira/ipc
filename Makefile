@@ -1,6 +1,6 @@
 
 # Sources:
-SRCS:=base.c utils.c main.c
+SRCS:=ipc_calculator.c mylib.c
 OBJS:=$(SRCS:.c=.o)
 
 
@@ -10,34 +10,30 @@ CFLAGS:= -c
 LD:=gcc
 
 # Targets:
-
-all: example
+all: ipc_calculator
 
 clean:
 	@echo Cleaning.
 	@rm -f *.o
-	@rm -f example
+	@rm -f ipc_calculator
 
-example: $(OBJS)
+ipc_calculator: $(OBJS)
 	@echo $@
 	@$(LD) -o $@ $^
 
+# MAGARI CI SERVIRA'
+#utils.o: utils.c utils.h
+#	@echo $@
+#	@$(CC) $(CFLAGS) -o $@ $<
 
-base.o: base.c base.h
+ipc_calculator.o: ipc_calculator.c mylib.h
 	@echo $@
 	@$(CC) $(CFLAGS) -o $@ $<
 
-utils.o: utils.c utils.h
-	@echo $@
-	@$(CC) $(CFLAGS) -o $@ $<
-
-main.o: main.c mylib.h
-	@echo $@
-	@$(CC) $(CFLAGS) -o $@ $<
-
-mylib.h: base.h utils.h
+mylib.h:
 	@echo $@
 	@touch $@
 
-
+# Collects as dependencies targets which do not match
+# any generated file name (e.g. all, clean).
 .PHONY: all clean
