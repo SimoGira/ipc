@@ -1,24 +1,24 @@
-
 # Sources:
 SRCS:=ipc_calculator.c mylib.c
-OBJS:=$(SRCS:.c=.o)
 
+# Objects:
+OBJS:=$(SRCS:.c=.o)
 
 # Config:
 CC:=gcc
-CFLAGS:= -c
+CFLAGS:= -c -g -Wall
 LD:=gcc
 
-# Targets:
-all: ipc_calculator
+# Default target:
+all: ipc_calculator.x
 
 clean:
-	@echo Cleaning.
+	@echo Cleaning..
 	@rm -f *.o
-	@rm -f ipc_calculator
+	@rm -f ipc_calculator.x
 
-ipc_calculator: $(OBJS)
-	@echo $@
+ipc_calculator.x: $(OBJS)
+	@echo Linking $@
 	@$(LD) -o $@ $^
 
 # MAGARI CI SERVIRA'
