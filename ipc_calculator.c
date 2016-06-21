@@ -24,9 +24,9 @@
 #include <sys/sem.h> 
 
 #include "mylib.h"
+#include "utils.h"
 #define STDIN 0
 #define STDOUT 1
-#define MYDEBUG printf ("This is line %d.\n", __LINE__);
 
 
 #ifndef __APPLE__
@@ -74,7 +74,7 @@ const int SMD_STATUS = 103;
 const int SMD_STARTED = 104;
 
 struct operation* current_operation;
-struct result* current_result; 
+struct result* current_result;
 
 struct sembuf sops;
 
@@ -84,7 +84,7 @@ void sem_v(int semid, int num)
 	//sops.sem_flg = SEM_UNDO;
 	sops.sem_num = num;
 	if( semop (semid, &sops , 1) == -1)
-		syserr("semaforo", "V");		  
+		syserr("semaphore", "V");
 }
 
 void sem_p(int semid, int num)
@@ -93,7 +93,7 @@ void sem_p(int semid, int num)
 	//sops.sem_flg = SEM_UNDO;
 	sops.sem_num = num;
 	if( semop (semid, &sops , 1) == -1)
-		syserr("semaforo", "P");
+		syserr("semaphore", "P");
 }
 
 int main(int argc, char *argv[]){
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]){
     int line_count = 0;
     
     // open file
-    int fd = open("configuration.txt",O_RDONLY|O_SYNC, S_IRUSR);
+    int fd = open("config.txt",O_RDONLY|O_SYNC, S_IRUSR);
     if (fd < 0) {
         syserr (argv[0], "open() failure");
     }
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]){
     while ((count = (int) read(fd, &line[i], 1)) > 0) {             // read byte to byte
         if(line[i] == '\n'){
             line[i] = '\0';
-            
+        
             line_count++;
             
             char * str_temp = (char*) malloc(sizeof(char)*i);
@@ -139,6 +139,7 @@ int main(int argc, char *argv[]){
         else
             i++;
     }
+    
     if (count == -1)
         syserr (argv[0], "write() failure");
     close(fd);
@@ -185,13 +186,11 @@ int main(int argc, char *argv[]){
     list_free(first_element);
     first_element = NULL;
          
-    childs_pid = (int*) malloc(sizeof (int*) * NPROC);       // allocate memory for childs 
-  
+    childs_pid = (int*) malloc(sizeof (int*) * NPROC);       // allocate memory for childs
   
  	// semafori
     union semun arg;
     arg.val = 0;
-        
     
     // per i figli 
     if (( sem_computing = semget (ftok(argv[0], 'a') , NPROC, IPC_CREAT | 0777)) == -1) 
@@ -221,7 +220,7 @@ int main(int argc, char *argv[]){
 	arg.array = sem_init; 
 	semctl(sem_parent, 3, SETALL, arg);
   
-	// memoria condivisa
+	// shared memory
 	current_operation = (struct operation*) xmalloc(SMD_OP, sizeof(struct operation));	
 	current_result = (struct result*) xmalloc(SMD_RES, sizeof(struct result)); 
     free_child = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);	 
@@ -231,7 +230,7 @@ int main(int argc, char *argv[]){
 	childs_started = (int*) xmalloc(SMD_STARTED, sizeof(int));
 	*childs_started = 0;	
      
-    pid_t pid; 
+    pid_t pid;
     for (i = 0; i < NPROC; i++)
     {
         pid = fork();
@@ -251,7 +250,7 @@ int main(int argc, char *argv[]){
 	{
         parent(); 
         
-        // cancella semafori
+        // delete semaphore
 		if (semctl(sem_computing, 0, IPC_RMID, NULL) == -1) 
 			syserr(argv[0], "Error deleting sem_computing!"); 
 		if (semctl(sem_wait_data, 0, IPC_RMID, NULL) == -1) 
@@ -369,7 +368,14 @@ void parent()
 	
 	for(i = 0; i < n_operations; i++)
     {
-    	printf("result: %.2f\n", results[i]);    	
+        char res[20] = "result: ";
+        sprintf(res, "%.2f\n", results[i]);                 // NON SONO SICURO SI POSSA USARE SPRINTF
+        int count = (int) write(STDOUT, res, strlen(res));
+        if (count == -1)
+            syserr ("res", "write() failure");
+        
+        
+    	//printf("result: %.2f\n", results[i]);
     }
     
     xfree(childs_started);
@@ -382,7 +388,7 @@ void parent()
 
 void child()
 {
-    int res;
+    float res; // result of operations
     
   	sem_p(sem_parent, 0); 
     (*childs_started)++;
@@ -428,20 +434,16 @@ void child()
         res = process_operation(val1, val2, op);
         
         // avvisa di aver terminato il calcolo
-     
         sem_v(sem_computing, id_number); // calcolo terminato
         
         // attende che il padre richieda i dati
-     
         sem_p(sem_request_result, id_number);
         
         // scrivi risultato calcolo
-     
         current_result->val = res;
         current_result->id = op_id;
         
         // dice al padre che i dati sono pronti per essere letti
-     
         sem_v(sem_parent, 1);
     }
 }

@@ -1,13 +1,14 @@
 # Sources:
-SRCS:=ipc_calculator.c mylib.c
+SRCS:=ipc_calculator.c mylib.c utils.c
 
 # Objects:
 OBJS:=$(SRCS:.c=.o)
 
 # Config:
 CC:=gcc
-CFLAGS:= -c -g -Wall
+CFLAGS:=-c -Wall
 LD:=gcc
+LDFLAGS:=-g
 
 # Default target:
 all: ipc_calculator.x
@@ -19,14 +20,13 @@ clean:
 
 ipc_calculator.x: $(OBJS)
 	@echo Linking $@
-	@$(LD) -o $@ $^
+	@$(LD) $(LDFLAGS) -o $@ $^
 
-# MAGARI CI SERVIRA'
-#utils.o: utils.c utils.h
-#	@echo $@
-#	@$(CC) $(CFLAGS) -o $@ $<
+utils.o: utils.c utils.h
+	@echo $@
+	@$(CC) $(CFLAGS) -o $@ $<
 
-ipc_calculator.o: ipc_calculator.c mylib.h
+ipc_calculator.o: ipc_calculator.c mylib.h utils.h
 	@echo $@
 	@$(CC) $(CFLAGS) -o $@ $<
 
