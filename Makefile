@@ -17,6 +17,7 @@ clean:
 	@echo Cleaning..
 	@rm -f *.o
 	@rm -f ipc_calculator.x
+	@echo done.
 
 ipc_calculator.x: $(OBJS)
 	@echo Linking $@
@@ -37,3 +38,6 @@ mylib.h:
 # Collects as dependencies targets which do not match
 # any generated file name (e.g. all, clean).
 .PHONY: all clean
+
+
+

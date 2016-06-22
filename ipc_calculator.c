@@ -44,6 +44,11 @@ int sem_request_result;
 int sem_computing;
 int sem_wait_data;
     
+/**
+* @brief Descrizione breve
+*
+* Descrizione dettagliata
+*/
 struct operation{
 	int id;
     int val1;
@@ -78,6 +83,11 @@ struct result* current_result;
 
 struct sembuf sops;
 
+/**
+ * @brief descrizione breve
+ *
+ * descrizione dettagliata 
+ */
 void sem_v(int semid, int num)
 {
 	sops.sem_op = 1;
