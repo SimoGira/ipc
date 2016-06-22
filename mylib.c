@@ -28,7 +28,7 @@ float process_operation(int val1, int val2, char op){
             return (float)(val1 * val2);
             break;
         case '/':
-            return (float)val1 / (float)(val2);
+            return (float)val1 / val2;
             break;
         default:
             syserr("process operation: ", "not valid operator");

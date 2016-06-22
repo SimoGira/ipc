@@ -24,7 +24,6 @@
 #include <sys/sem.h> 
 
 #include "mylib.h"
-#include "utils.h"
 #define STDIN 0
 #define STDOUT 1
 
@@ -44,11 +43,6 @@ int sem_request_result;
 int sem_computing;
 int sem_wait_data;
     
-/**
-* @brief Descrizione breve
-*
-* Descrizione dettagliata
-*/
 struct operation{
 	int id;
     int val1;
@@ -79,22 +73,17 @@ const int SMD_STATUS = 103;
 const int SMD_STARTED = 104;
 
 struct operation* current_operation;
-struct result* current_result;
+struct result* current_result; 
 
 struct sembuf sops;
 
-/**
- * @brief descrizione breve
- *
- * descrizione dettagliata 
- */
 void sem_v(int semid, int num)
 {
 	sops.sem_op = 1;
 	//sops.sem_flg = SEM_UNDO;
 	sops.sem_num = num;
 	if( semop (semid, &sops , 1) == -1)
-		syserr("semaphore", "V");
+		syserr("semaforo", "V");		  
 }
 
 void sem_p(int semid, int num)
@@ -103,7 +92,7 @@ void sem_p(int semid, int num)
 	//sops.sem_flg = SEM_UNDO;
 	sops.sem_num = num;
 	if( semop (semid, &sops , 1) == -1)
-		syserr("semaphore", "P");
+		syserr("semaforo", "P");
 }
 
 int main(int argc, char *argv[]){
@@ -116,7 +105,7 @@ int main(int argc, char *argv[]){
     int line_count = 0;
     
     // open file
-    int fd = open("config.txt",O_RDONLY|O_SYNC, S_IRUSR);
+    int fd = open("configuration.txt",O_RDONLY|O_SYNC, S_IRUSR);
     if (fd < 0) {
         syserr (argv[0], "open() failure");
     }
@@ -130,7 +119,7 @@ int main(int argc, char *argv[]){
     while ((count = (int) read(fd, &line[i], 1)) > 0) {             // read byte to byte
         if(line[i] == '\n'){
             line[i] = '\0';
-        
+            
             line_count++;
             
             char * str_temp = (char*) malloc(sizeof(char)*i);
@@ -149,7 +138,6 @@ int main(int argc, char *argv[]){
         else
             i++;
     }
-    
     if (count == -1)
         syserr (argv[0], "write() failure");
     close(fd);
@@ -196,11 +184,13 @@ int main(int argc, char *argv[]){
     list_free(first_element);
     first_element = NULL;
          
-    childs_pid = (int*) malloc(sizeof (int*) * NPROC);       // allocate memory for childs
+    childs_pid = (int*) malloc(sizeof (int*) * NPROC);       // allocate memory for childs 
+  
   
  	// semafori
     union semun arg;
     arg.val = 0;
+        
     
     // per i figli 
     if (( sem_computing = semget (ftok(argv[0], 'a') , NPROC, IPC_CREAT | 0777)) == -1) 
@@ -230,7 +220,7 @@ int main(int argc, char *argv[]){
 	arg.array = sem_init; 
 	semctl(sem_parent, 3, SETALL, arg);
   
-	// shared memory
+	// memoria condivisa
 	current_operation = (struct operation*) xmalloc(SMD_OP, sizeof(struct operation));	
 	current_result = (struct result*) xmalloc(SMD_RES, sizeof(struct result)); 
     free_child = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);	 
@@ -260,7 +250,7 @@ int main(int argc, char *argv[]){
 	{
         parent(); 
         
-        // delete semaphore
+        // cancella semafori
 		if (semctl(sem_computing, 0, IPC_RMID, NULL) == -1) 
 			syserr(argv[0], "Error deleting sem_computing!"); 
 		if (semctl(sem_wait_data, 0, IPC_RMID, NULL) == -1) 

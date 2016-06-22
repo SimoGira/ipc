@@ -3,11 +3,11 @@
 
 if [[ $1 == "compile" || $1 == "c" ]]; then
 	rm -rf a.out
-	gcc ipc_calculator.c mylib.c  -Wall
+	gcc ipc_calculator.c mylib.c  -Wall -g
 
 elif [[ $1 == "compilerun" || $1 == "cr" ]]; then
 	rm -rf a.out
-	gcc ipc_calculator.c mylib.c  -Wall
+	gcc ipc_calculator.c mylib.c  -Wall -g
 	./a.out
 	
 elif [[ $1 == "push" ]]; then
