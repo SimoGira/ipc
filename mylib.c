@@ -16,6 +16,12 @@
 
 #include "mylib.h"
 
+/** @brief Gets the result of related operations.
+ * @param val1 operand 1.
+ * @param op the operator
+ * @param val2 operand 2
+ * @return result of operations.
+ */
 float process_operation(int val1, int val2, char op){
     switch (op) {
         case '+':

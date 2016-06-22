@@ -124,7 +124,7 @@ int main(int argc, char *argv[]){
             line_count++;
             
             char * str_temp = (char*) malloc(sizeof(char)*i);
-            strcpy(str_temp,  line);                                // save every line in to line
+            strcpy(str_temp,  line);                                // save every line in to line array
             
             if (first_element == NULL){
                 first_element = list_create(str_temp);
@@ -148,8 +148,7 @@ int main(int argc, char *argv[]){
          syserr (argv[0], "file is empty!");
     }
     
-    n_operations = line_count - 1;  // becouse the first line isn't a operation
-    printf("n_operations %i\n", n_operations);
+    n_operations = line_count - 1;  // becouse the first line isn't an operation
     
     NPROC = atoi(first_element->value);         // number of process to create
     
@@ -258,7 +257,28 @@ int main(int argc, char *argv[]){
 		if (semctl(sem_request_result, 0, IPC_RMID, NULL) == -1) 
 			syserr(argv[0], "Error deleting sem_request_result!"); 
 		if (semctl(sem_parent, 0, IPC_RMID, NULL) == -1) 
-			syserr(argv[0], "Error deleting sem_parent!"); 
+			syserr(argv[0], "Error deleting sem_parent!");
+        
+        // open/create the file for results
+        fd = open("results.txt", O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR );
+        if (fd < 0) {
+            syserr ("results.txt", "open() failure");
+        }
+        
+        
+        // write the results of operations on a file
+        char res[20];
+        for(i = 0; i < n_operations; i++)
+        {
+            sprintf(res, "%.2f\n", results[i]);                 // NON SONO SICURO SI POSSA USARE SPRINTF
+            count = (int) write(fd, res, strlen(res));
+            if (count == -1)
+                syserr ("results", "write() on file failure");
+        }
+        
+        close(fd);
+        
+        
     }
      
     return 0;
@@ -279,14 +299,11 @@ void parent()
 {
 	 
  	sem_p(sem_parent, 1);
-	 
  	
     int op_id;
     for(op_id = 0; op_id < n_operations; op_id++)
     {
     
-	
-		
 		// preleva l'id del figlio da liberare
     	int i = operations[op_id].id;
     	if(i == -1) 
@@ -368,7 +385,7 @@ void parent()
 	
 	for(i = 0; i < n_operations; i++)
     {
-        char res[20] = "result: ";
+        char res[20];
         sprintf(res, "%.2f\n", results[i]);                 // NON SONO SICURO SI POSSA USARE SPRINTF
         int count = (int) write(STDOUT, res, strlen(res));
         if (count == -1)
