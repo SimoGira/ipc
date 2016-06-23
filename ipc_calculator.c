@@ -173,7 +173,7 @@ int main(int argc, char *argv[]){
     {
     
         char* id = strtok(list->value, " "); 
-        char* val1 = strtok(NULL, " "); 
+        char* val1 = strtok(NULL, " ");         /* NULL must be used to get tokens from the previous string now */
         char* op = strtok(NULL, " "); 
         char* val2  = strtok(NULL, " ");
         
