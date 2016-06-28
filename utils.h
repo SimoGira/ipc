@@ -6,6 +6,12 @@
 //
 //
 
+/*
+ @file    utils.h
+ @author  Simone, s.girardi92@gmail.com
+ @version 1.0
+ */
+
 #ifndef utils_h
 #define utils_h
 

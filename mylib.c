@@ -5,10 +5,12 @@
 //  Created by Simone Girardi on 13/05/16.
 //
 //
-/******************************************
- MODULO: mylib.c
- SCOPO: libreria di funzioni d’utilita'
-******************************************/
+
+/*
+ @file    mylib.c
+ @author  Simone, s.girardi92@gmail.com
+ @version 1.0
+ */
 
 #include "mylib.h"
 #include "utils.h"

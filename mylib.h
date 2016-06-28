@@ -5,9 +5,12 @@
 //  Created by Simone Girardi on 13/05/16.
 //
 //
-/******************************************
- 
-******************************************/
+
+/*
+ @file    mylib.h
+ @author  Simone, s.girardi92@gmail.com
+ @version 1.0
+ */
 
 #ifndef MYLIB_H
 #define MYLIB_H

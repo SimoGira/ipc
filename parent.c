@@ -1,10 +1,9 @@
-//
-//  parent.c
-//
-//
-//  Created by Simone Girardi on 27/06/16.
-//
-//
+/**
+ * @file parent.h
+ * @author Simone Girardi
+ * @date 27 jun 2016.
+ * @version 1.0
+ */
 
 #include "parent.h"
 #include "mylib.h"
@@ -12,6 +11,11 @@
 
 #define CALLER "parent.c"
 #define PARENT "[\033[38;5;208mParent\033[m]"
+
+/* sem_parent inizialized to {1, 0, 0}:
+ * 0: mutex
+ * 1: result_ready
+ * 2: data_read */
 
 char str_info[100];
 
@@ -29,7 +33,7 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, int *childs_s
     sleep(NPROC);
     
     int i;
-    int op_id;
+    int op_id; // operation number "op_id"
     for(op_id = 0; op_id < n_operations; op_id++)
     {
         
@@ -38,11 +42,14 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, int *childs_s
         i = operations[op_id].id;
         print_parent_info(""PARENT" next operation is for child %d\n", i);
         
-        if(i == -1)
+        /* -1 corresponds to 0 from the specifics */
+        if(i == -1){
+            print(""PARENT" searching for the first free child..\n",CALLER, __LINE__);
             i = get_first_free_child(NPROC, child_isFree);
+        }
         
         
-        //se il figlio è occupato
+        /* only if child is busy */
         if(!child_isFree[i])
         {
             // attende che abbia finito il calcolo
@@ -89,7 +96,6 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, int *childs_s
     for(i = 0; i < NPROC; i++)
     {
         
-        
         if(!child_isFree[i])
         {
             // attende che abbia finito il calcolo
@@ -104,7 +110,7 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, int *childs_s
             
             sem_p(sem_parent, 1);
             
-            
+            /* save the result */
             results[current_result->id] = current_result->val;
         }
         
@@ -121,28 +127,30 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, int *childs_s
         sem_p(sem_parent, 2);
     }
     
-    
     print_results(results , n_operations);
     
     return results;
     
 }
 
+//----------------------------------------------------------------------------------------------------------------
 int get_first_free_child(int NPROC, bool child_isFree[])
 {
-    print(""PARENT" searching for the first free child..\n",CALLER, __LINE__);
-    sleep(1);
     int i;
-    
-    for(i = 0; i < NPROC; i++)
-    {
-        if(child_isFree[i])
-            print_parent_info(""PARENT" the first free child have id %d\n", i+1);
-            return i;
+    while (1) {
+        for(i = 0; i < NPROC; i++)
+        {
+            if(child_isFree[i]){
+                print_parent_info(""PARENT" the first free child have id %d\n", i+1);
+                return i;
+            }
+        }
+        sleep(1);
+        /*  try again */
     }
-    return 0;
 }
 
+//----------------------------------------------------------------------------------------------------------------
 void print_parent_info(const char *info, int child_id){
     if(snprintf(str_info, 100, info, child_id+1) == -1){
         syserr("parent()", "snprintf() error oversized string");
@@ -150,6 +158,7 @@ void print_parent_info(const char *info, int child_id){
     print(str_info, CALLER, __LINE__);
 }
 
+//----------------------------------------------------------------------------------------------------------------
 void print_results(float results[] , int n_operations){
     print("-------------------------------------\n "PARENT" write results to STDOUT\n-------------------------------------\n",CALLER, __LINE__);
     char res[20];

@@ -5,6 +5,13 @@
 //  Created by Simone Girardi on 13/05/16.
 //  Copyright © 2016 Simone Girardi. All rights reserved.
 //
+
+/*
+ @file    ipc_calculator.c
+ @author  Simone, s.girardi92@gmail.com
+ @version 1.0
+ */
+
 #include "mylib.h"
 #include "utils.h"
 #include "parent.h"

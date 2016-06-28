@@ -1,10 +1,9 @@
-//
-//  child.c
-//  
-//
-//  Created by Simone Girardi on 27/06/16.
-//
-//
+/**
+ * @file child.h
+ * @author Simone Girardi
+ * @date 27 jun 2016.
+ * @version 1.0
+ */
 
 #include "child.h"
 #include "mylib.h"
@@ -20,7 +19,10 @@ void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, s
     int sem_request_result = my_semaphores[2];
     int sem_parent = my_semaphores[3];
     
-    float res; // result of operation
+    /* support variable to perform the operation */
+    float res;
+    int val1, val2, op_id;
+    char op;
     
     /* sem_parent inizialized to {1, 0, 0}:
      * 0: mutex
@@ -39,6 +41,7 @@ void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, s
     sleep(NPROC+1);
     print_child_info("[Child %d] ready!\n", id_number);
     
+    
     while(true)
     {
         child_isFree[id_number] = true;
@@ -55,10 +58,10 @@ void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, s
         
         print_child_info("[Child %d] unlocked from parent, reading data...\n", id_number);
     
-        int val1 = current_operation->val1;
-        int val2 = current_operation->val2;
-        char op = current_operation->operator;
-        int op_id = current_operation->id;
+        val1 = current_operation->val1;
+        val2 = current_operation->val2;          //***************************
+        op = current_operation->operator;        //***** CRITICAL SECTION ****
+        op_id = current_operation->id;           //***************************
         
         // avvisa che ho finito di leggere
         
@@ -91,11 +94,10 @@ void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, s
         
         print_child_info("[Child %d] write the result...\n", id_number);
         
-        // scrivi risultato calcolo
-        current_result->val = res;
-        current_result->id = op_id;
+        // scrivi risultato calcolo         //***************************
+        current_result->val = res;          //**** CRITICAL SECTION *****
+        current_result->id = op_id;         //***************************
         
-        sleep(1);
         print_child_info("[Child %d] result ready to be read!\n", id_number);
         
         // dice al padre che i dati sono pronti per essere letti
@@ -110,9 +112,8 @@ void print_child_info(const char *info, int id_number){
     print(str_info, CALLER, __LINE__);
 }
 
-
-void print_operation_info(const char *info, int id_number, int val1, int val2, char op){
-    if(snprintf(str_info, 100, info , id_number+1, val1, val2, op) == -1){
+void print_operation_info(const char *info, int id_number, int val1, char op, int val2){
+    if(snprintf(str_info, 100, info , id_number+1, val1, op, val2) == -1){
         syserr("child()", "snprintf() error oversized string");
     }
     print(str_info, CALLER, __LINE__);
