@@ -14,7 +14,7 @@ elif [[ $1 == "push" ]]; then
 	git commit -m "update"
 	git push
 else
-	./a.out
+	echo "Usage: ./run.sh [-c] [-cr] [push]"
 fi
 
 
