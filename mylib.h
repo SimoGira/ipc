@@ -81,7 +81,7 @@ void list_print(struct list *this);
 
 float process_operation(int val1, int val2, char op);
 
-void print(const char* msg, int line);
+void print(const char* msg, const char*caller, int line);
 
 #endif /* mylib_h */
 

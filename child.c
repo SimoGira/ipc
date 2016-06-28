@@ -10,8 +10,9 @@
 #include "mylib.h"
 #include "parent.h"
 #include "utils.h"
+#define CALLER "child.c"
 
-char str_info[50];
+char str_info[100];
 
 void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, struct operation *current_operation, struct result *current_result, bool child_isFree[]){
     
@@ -36,7 +37,7 @@ void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, s
     
     sem_v(sem_parent, 0);
     
-    sleep(6);
+    sleep(NPROC+1);
     print_child_info("[Child %d] ready!\n", id_number);
     
     while(true)
@@ -53,7 +54,7 @@ void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, s
         
         // legge i dati
         
-        print_child_info("[Child %d] reading data...\n", id_number);
+        print_child_info("[Child %d] unlocked from parent, reading data...\n", id_number);
     
         int val1 = current_operation->val1;
         int val2 = current_operation->val2;
@@ -62,7 +63,7 @@ void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, s
         
         // avvisa che ho finito di leggere
         
-        print_child_info("[Child %d] finished to read data...\n", id_number);
+        print_operation_info("[Child %d] read: %d %c %d\n", id_number,val1,op,val2);
         
         sem_v(sem_parent, 2);
         
@@ -76,17 +77,15 @@ void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, s
         
         // calcola
         sleep(1);
-        print_child_info("[Child %d] processing operation: ", id_number);
+        print_child_info("[Child %d] processing operation...\n", id_number);
         
         res = process_operation(val1, val2, op);
-        
-        print_operation_info("%d %c %d = %d", val1 ,val2 ,op, res);
         
         // avvisa di aver terminato il calcolo
         sem_v(sem_computing, id_number); // calcolo terminato
         
         sleep(1);
-        print_child_info("[Child %d] wait that parent request the result...\n", id_number);
+        print_child_info("[Child %d] wait parent for request of result...\n", id_number);
         
         // attende che il padre richieda i dati
         sem_p(sem_request_result, id_number);
@@ -106,16 +105,16 @@ void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, s
 }
 
 void print_child_info(const char *info, int id_number){
-    if(snprintf(str_info, 50, info , id_number) == -1){
+    if(snprintf(str_info, 100, info , id_number+1) == -1){
         syserr("child()", "snprintf() error oversized string");
     }
-    print(str_info, __LINE__);
+    print(str_info, CALLER, __LINE__);
 }
 
 
-void print_operation_info(const char *info, int val1, int val2, char op, int res){
-    if(snprintf(str_info, 50, info ,val1, val2, op , res) == -1){
+void print_operation_info(const char *info, int id_number, int val1, int val2, char op){
+    if(snprintf(str_info, 100, info , id_number+1, val1, val2, op) == -1){
         syserr("child()", "snprintf() error oversized string");
     }
-    print(str_info, __LINE__);
+    print(str_info, CALLER, __LINE__);
 }

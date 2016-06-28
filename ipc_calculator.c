@@ -10,6 +10,8 @@
 #include "utils.h"
 #include "parent.h"
 #include "child.h"
+#define CALLER "ipc_calculator.c"
+#define PARENT "[\033[38;5;208mParent\033[m]"
 
 int sem_parent;
 int sem_request_result;
@@ -23,9 +25,6 @@ int n_operations = -1;
 int NPROC = 0;
 int* childs_started;
 
-void parent();
-void child();
-
 const int SHM_COP = 101;
 const int SHM_RES = 102;
 const int SHM_STATUS = 103;
@@ -38,7 +37,7 @@ struct result* current_result;
 
 int main(int argc, char *argv[]){
     
-    print("~~~~~~~~~~~~~~~~~~~\n\e[7;36m  IPC CALCULATOR   \e[0m\n~~~~~~~~~~~~~~~~~~~\n", __LINE__);
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\e[7;36m            IPC CALCULATOR             \e[0m\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", CALLER, __LINE__);
     
     // ============================================================================================================
     //                                                SETUP - FROM FILE
@@ -193,10 +192,10 @@ int main(int argc, char *argv[]){
             child(id_number, NPROC, my_semaphores, childs_started, current_operation, current_result, child_isFree);
             break;
         } else {
-            if(snprintf(str_info, 100, "[Parent] create child %d with pid = %d\n" , i+1, pid) == -1){
+            if(snprintf(str_info, 100, ""PARENT" create child %d with pid = %d\n" , i+1, pid) == -1){
                 syserr(argv[0], "snprintf() error oversized string");
             }
-            print(str_info, __LINE__);
+            print(str_info, CALLER, __LINE__);
             sleep(1);
         }
     }

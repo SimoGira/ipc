@@ -14,6 +14,7 @@
 #include "utils.h"
 #include "parent.h"
 #include "child.h"
+#define CALLER "mylib.c"
 
 /** @brief Gets the result of related operations.
  * @param val1 operand 1.
@@ -101,7 +102,7 @@ struct list *list_add(char* value, struct list *previous){
 
 void list_print(struct list *this){
     if (this != NULL) {
-        printf("%s ", this->value);
+        print(this->value, CALLER, __LINE__);
         list_print(this->next);
     }
 }
@@ -110,15 +111,6 @@ void list_free(struct list *this){
     if (this != NULL) { 
         list_free(this->next);
         free(this);
-    }
-}
-
-void print(const char *msg, int line){
-    int count = (int) write(STDOUT, msg, strlen(msg));
-    if (count == -1){
-        char line_str[20];
-        sprintf(line_str ,"%d" , line);
-        syserr (line_str, "print() failure");
     }
 }
 
@@ -145,7 +137,16 @@ void syserr_ext(char *prog, char *msg, int line){
     perror(str_temp);
      
     exit(1);
-     
+}
+
+void print(const char* msg, const char*caller, int line){
+    int count = (int) write(STDOUT, msg, strlen(msg));
+    if (count == -1){
+        char line_str[50];
+        sprintf(line_str ,"--- %s line %d ---" , caller, line);
+        syserr (line_str, "print() failure");
+    }
+    fflush(stdout);
 }
 
 

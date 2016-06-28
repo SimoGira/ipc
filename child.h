@@ -17,7 +17,7 @@ void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, s
 
 void print_child_info(const char *info, int id_number);
 
-void print_operation_info(const char *info, int val1, int val2, char op, int res);
+void print_operation_info(const char *info, int id_number, int val1, int val2, char op);
 
 #endif /* child_h */
 

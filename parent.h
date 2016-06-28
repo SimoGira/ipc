@@ -17,4 +17,6 @@ int get_first_free_child(int NPROC, bool child_isFree[]);
 
 void print_parent_info(const char *info, int child_id);
 
+void print_results(float resutls[], int n_operations);
+
 #endif /* parent_h */
