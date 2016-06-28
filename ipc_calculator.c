@@ -6,64 +6,18 @@
 //  Copyright © 2016 Simone Girardi. All rights reserved.
 //
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-
-// memoria condivisa
-# include <sys/ipc.h>
-# include <sys/shm.h>
-
- 
-// semafori 
-#include <sys/types.h>
-#include <sys/sem.h> 
-
 #include "mylib.h"
 #include "utils.h"
-#define STDIN 0
-#define STDOUT 1
-
-
-#ifndef __APPLE__
-union semun
-{
-	int val;                // value for SETVAL
-	struct semid_ds* buf;   // buffer for IPC_STAT, IPC_SET
-	unsigned short*  array; // array for GETALL, SETALL
-	struct seminfo*  __buf; // buffer for IPC_INFO
-}; 
-#endif
+#include "parent.h"
+#include "child.h"
 
 int sem_parent;
 int sem_request_result;
 int sem_computing;
 int sem_wait_data;
-    
-/**
-* @brief Descrizione breve
-*
-* Descrizione dettagliata
-*/
-struct operation{
-	int id;
-    int val1;
-    int val2;
-    char operator; 
-};
 
-struct result {
-	int id;
-	float val;
-};
-
-struct operation* operations;
-int *childs_pid; 
-bool * free_child;
+struct operation *operations;
+bool * child_isFree;
 int id_number = -1;
 int n_operations = -1;
 int NPROC = 0;
@@ -72,76 +26,50 @@ int* childs_started;
 void parent();
 void child();
 
-float* results;
-const int SMD_OP = 101;
-const int SMD_RES = 102;
-const int SMD_STATUS = 103;
-const int SMD_STARTED = 104;
+const int SHM_COP = 101;
+const int SHM_RES = 102;
+const int SHM_STATUS = 103;
+const int SHM_STARTED = 104;
 
-struct operation* current_operation;
+struct operation *current_operation;
 struct result* current_result;
 
-struct sembuf sops;
 
-/**
- * @brief descrizione breve
- *
- * descrizione dettagliata 
- */
-void sem_v(int semid, int num)
-{
-	sops.sem_op = 1;
-	//sops.sem_flg = SEM_UNDO;
-	sops.sem_num = num;
-	if( semop (semid, &sops , 1) == -1)
-		syserr("semaphore", "V");
-}
-
-void sem_p(int semid, int num)
-{
-	sops.sem_op = -1;
-	//sops.sem_flg = SEM_UNDO;
-	sops.sem_num = num;
-	if( semop (semid, &sops , 1) == -1)
-		syserr("semaphore", "P");
-}
 
 int main(int argc, char *argv[]){
     
-    char *title = "~~~~~~~~~~~~~~~~~~~\n\e[7;36m  IPC CALCULATOR   \e[0m\n~~~~~~~~~~~~~~~~~~~\n";
-    int count = (int) write(STDOUT, title, strlen(title));
-    if (count == -1)
-        syserr (argv[0], "write() failure"); 
+    print("~~~~~~~~~~~~~~~~~~~\n\e[7;36m  IPC CALCULATOR   \e[0m\n~~~~~~~~~~~~~~~~~~~\n", __LINE__);
     
-    int line_count = 0;
-    
-    // open file
+    // ============================================================================================================
+    //                                                SETUP - FROM FILE
+    // ============================================================================================================
     int fd = open("config.txt",O_RDONLY|O_SYNC, S_IRUSR);
     if (fd < 0) {
         syserr (argv[0], "open() failure");
     }
     
-    
     char line[50];
+    int ret_val;
+    int line_count = 0;
     int i = 0;
     struct list* first_element = NULL;
     struct list* last_element = NULL;
     
-    while ((count = (int) read(fd, &line[i], 1)) > 0) {             // read byte to byte
+    while ((ret_val = (int) read(fd, &line[i], 1)) > 0) {             // read byte to byte
         if(line[i] == '\n'){
             line[i] = '\0';
-        
+            
             line_count++;
             
             char * str_temp = (char*) malloc(sizeof(char)*i);
-            strcpy(str_temp,  line);                                // save every line in to line array
+            strcpy(str_temp,  line);                                // save each line in to line array
             
             if (first_element == NULL){
                 first_element = list_create(str_temp);
                 last_element = first_element;
             }
             else{
-            	last_element =  list_add(str_temp, last_element);
+                last_element =  list_add(str_temp, last_element);
             }
             
             i = 0;
@@ -150,12 +78,13 @@ int main(int argc, char *argv[]){
             i++;
     }
     
-    if (count == -1)
-        syserr (argv[0], "write() failure");
+    if (ret_val == -1)
+        syserr (argv[0], "read() failure");
+    
     close(fd);
     
     if(first_element == NULL){
-         syserr (argv[0], "file is empty!");
+        syserr (argv[0], "file is empty!");
     }
     
     n_operations = line_count - 1;  // becouse the first line isn't an operation
@@ -163,111 +92,130 @@ int main(int argc, char *argv[]){
     NPROC = atoi(first_element->value);         // number of process to create
     
     operations = (struct operation*)malloc(sizeof(struct operation)*n_operations);
-    results = (float*) malloc(sizeof(float) * n_operations);
     
     
-	// take first element of this list as the first operation
+    // take first element of this list as the first operation
     struct list* list = first_element->next;
-    i = 0; 
+    i = 0;
     while (list != NULL)
     {
-    
-        char* id = strtok(list->value, " "); 
+        
+        char* id = strtok(list->value, " ");
         char* val1 = strtok(NULL, " ");         /* NULL must be used to get tokens from the previous string now */
-        char* op = strtok(NULL, " "); 
+        char* op = strtok(NULL, " ");
         char* val2  = strtok(NULL, " ");
         
         if(val1 == NULL || op == NULL || val2 == NULL)
-     		syserr (argv[0], "Wrong operation format");
-     		
-       	//printf("process %s: \n	operation: %s %s %s\n",id, val1, op, val2);
+            syserr (argv[0], "Wrong operation format");
         
         operations[i].id = atoi(id) - 1;
         operations[i].val1 = atoi(val1);
         operations[i].val2 = atoi(val2);
         operations[i].operator = op[0];
         i++;
-         
-        list = list->next; 
-    } 
-     
+        
+        list = list->next;
+    }
+    
     // free the lines memory
     list_free(first_element);
     first_element = NULL;
-         
-    childs_pid = (int*) malloc(sizeof (int*) * NPROC);       // allocate memory for childs
-  
- 	// semafori
-    union semun arg;
-    arg.val = 0;
     
-    // per i figli 
-    if (( sem_computing = semget (ftok(argv[0], 'a') , NPROC, IPC_CREAT | 0777)) == -1) 
-		syserr_ext (argv[0], " semget " , __LINE__); 
-	for(i = 0; i < NPROC; i++)
-    if (semctl(sem_computing, i, SETVAL, arg) == -1) 
-		syserr_ext (argv[0], " semctl " , __LINE__); 
-	
-    if (( sem_wait_data = semget (ftok(argv[0], 'b') , NPROC, IPC_CREAT | 0777)) == -1) 
-		syserr_ext (argv[0], " semget " , __LINE__);
-	for(i = 0; i < NPROC; i++)
-	if (semctl(sem_wait_data, i, SETVAL, arg) == -1) 
-		syserr_ext (argv[0], " semctl " , __LINE__); 
-	
-    if (( sem_request_result = semget (ftok(argv[0], 'c') , NPROC, IPC_CREAT  | 0777)) == -1)  
-		syserr_ext (argv[0], " semget " , __LINE__);
-	for(i = 0; i < NPROC; i++)
-	if (semctl(sem_request_result, i, SETVAL, arg) == -1) 
-		syserr_ext (argv[0], " semctl " , __LINE__); 
-	
-	// per il padre
-	// 0: mutex   1: result_ready  2: data_read
-	if (( sem_parent = semget (ftok(argv[0], 'd') , 3, IPC_CREAT | 0777)) == -1) {
-		syserr_ext (argv[0], " semget " , __LINE__);
-	} 
-    unsigned short sem_init[3] = {1, 0, 0};
-	arg.array = sem_init; 
-	semctl(sem_parent, 3, SETALL, arg);
-  
-	// shared memory
-	current_operation = (struct operation*) xmalloc(SMD_OP, sizeof(struct operation));	
-	current_result = (struct result*) xmalloc(SMD_RES, sizeof(struct result)); 
-    free_child = (bool*) xmalloc(SMD_STATUS, sizeof (bool*) * NPROC);	 
+    
+    // ------------------------------------------------------------------------------------------------------------
+    //                                                SETUP - SEMAPHORE
+    // ------------------------------------------------------------------------------------------------------------
+    union semun arg; // union to pass to semctl()
+    
+    unsigned short *sem_init = (unsigned short*) malloc(sizeof(unsigned short) * NPROC);
+    for (i = 0; i < NPROC; i++) {
+        sem_init[i] = 0;
+    }
+    
+    /* CREATE semaphores for childs */
+    sem_computing = do_semget(ftok(argv[0], 'a'), NPROC);
+    sem_wait_data = do_semget(ftok(argv[0], 'b'), NPROC);
+    sem_request_result = do_semget(ftok(argv[0], 'c'), NPROC);
+    
+    /* SETALL semphores to zero */
+    initialize_sem(sem_computing, &arg, sem_init);
+    initialize_sem(sem_wait_data, &arg, sem_init);
+    initialize_sem(sem_request_result, &arg, sem_init);
+    
+    
+    /* CREATE semaphore for parent */
+    sem_parent = do_semget(ftok(argv[0], 'd') , 3);
+    
+    /* SETALL semaphore to follow values:
+     * 0: mutex
+     * 1: result_ready
+     * 2: data_read */
+    sem_init = (unsigned short*) realloc(sem_init, sizeof(unsigned short) * 3);
+    *(sem_init) = 1;
+    *(sem_init + 1) = 0;
+    *(sem_init + 2) = 0;
+    
+    initialize_sem(sem_parent, &arg, sem_init);
+    
+    free(sem_init);
+    
+    int my_semaphores[] = { sem_computing, sem_wait_data, sem_request_result, sem_parent };
+    
+    // ------------------------------------------------------------------------------------------------------------
+    //                                                SETUP - SHARED MEMORY
+    // ------------------------------------------------------------------------------------------------------------
+    current_operation = (struct operation*) xmalloc(SHM_COP, sizeof(struct operation));
+    current_result = (struct result*) xmalloc(SHM_RES, sizeof(struct result));
+    child_isFree = (bool*) xmalloc(SHM_STATUS, sizeof (bool*) * NPROC);
+    childs_started = (int*) xmalloc(SHM_STARTED, sizeof(int));
+    
+    /* initialize all the children as free */
     for(i = 0; i < NPROC; i++)
-    	free_child[i] = true;
-    	
-	childs_started = (int*) xmalloc(SMD_STARTED, sizeof(int));
-	*childs_started = 0;	
-     
+        child_isFree[i] = true;
+    
+    /* initialize the number of childs_started*/
+    *childs_started = 0;
+    
+    
+    // ------------------------------------------------------------------------------------------------------------
+    //                                                 START - FORK()
+    // ------------------------------------------------------------------------------------------------------------
     pid_t pid;
+    char str_info[100];
+    
     for (i = 0; i < NPROC; i++)
     {
         pid = fork();
         if (pid < 0) {
             syserr("fork()", "cannot create a new process");
         } else if (pid == 0) {      // code execute from child
-            id_number = i;        // assign id number to process (utile per identificare poi il processo a cui far eseguire l'operazione)
-            child();
+            id_number = i;        // assign id number to child process
+            child(id_number, NPROC, my_semaphores, childs_started, current_operation, current_result, child_isFree);
             break;
-        } else {        
-            childs_pid[i] = pid;
-            //printf("child %i:\n	pid: %d\n", id_number, pid);
+        } else {
+            if(snprintf(str_info, 100, "[Parent] create child %d with pid = %d\n" , i+1, pid) == -1){
+                syserr(argv[0], "snprintf() error oversized string");
+            }
+            print(str_info, __LINE__);
+            sleep(1);
         }
     }
-
+    
     if(pid != 0)
-	{
-        parent(); 
+    {
+        float *results = my_parent(my_semaphores, n_operations, NPROC, childs_started, operations, current_operation, current_result, child_isFree);
         
-        // delete semaphore
-		if (semctl(sem_computing, 0, IPC_RMID, NULL) == -1) 
-			syserr(argv[0], "Error deleting sem_computing!"); 
-		if (semctl(sem_wait_data, 0, IPC_RMID, NULL) == -1) 
-			syserr(argv[0], "Error deleting sem_wait_data!"); 
-		if (semctl(sem_request_result, 0, IPC_RMID, NULL) == -1) 
-			syserr(argv[0], "Error deleting sem_request_result!"); 
-		if (semctl(sem_parent, 0, IPC_RMID, NULL) == -1) 
-			syserr(argv[0], "Error deleting sem_parent!");
+        /* free shared memory */
+        xfree(childs_started);
+        xfree(current_operation);
+        xfree(current_result);
+        xfree(child_isFree);
+        
+        /* delete all semaphores */
+        delete_sem(sem_computing);
+        delete_sem(sem_wait_data);
+        delete_sem(sem_request_result);
+        delete_sem(sem_parent);
         
         // open/create the file for results
         fd = open("results.txt", O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR );
@@ -280,199 +228,15 @@ int main(int argc, char *argv[]){
         char res[20];
         for(i = 0; i < n_operations; i++)
         {
-            sprintf(res, "%.2f\n", results[i]);                 // NON SONO SICURO SI POSSA USARE SPRINTF
-            count = (int) write(fd, res, strlen(res));
-            if (count == -1)
+            sprintf(res, "%.2f\n", results[i]);
+            
+            if ((ret_val = (int) write(fd, res, strlen(res))) == -1)
                 syserr ("results", "write() on file failure");
         }
         
         close(fd);
-        
-        
-    }
-     
-    return 0;
-}
-
-int get_first_free_child()
-{
-    int i;
-	for(i = 0; i < NPROC; i++)
-    {
-    	if(free_child[i])
-    		return i;
     }
     return 0;
-}
-
-void parent()
-{
-	 
- 	sem_p(sem_parent, 1);
- 	
-    int op_id;
-    for(op_id = 0; op_id < n_operations; op_id++)
-    {
-    
-		// preleva l'id del figlio da liberare
-    	int i = operations[op_id].id;
-    	if(i == -1) 
-    		i = get_first_free_child();
-    	
-    
-		//se il figlio è occupato
-    	if(!free_child[i])
-    	{
-			// attende che abbia finito il calcolo
-	
-    		sem_p(sem_computing, i);
-    		
-			// richiede eventuali dati precedenti
-	
-    		sem_v(sem_request_result, i);
-    		
-			//aspetta che i dati siano pronti da leggere
-	
-    		sem_p(sem_parent, 1);
-    		
-	
-    		results[current_result->id] = current_result->val;
-    	}
-
-		// inserisce i dati della prossima operazione
-	 
-		current_operation->id = op_id;
-		current_operation->val1 = operations[op_id].val1;
-		current_operation->val2 = operations[op_id].val2;
-		current_operation->operator = operations[op_id].operator;
-				
-		// libera il figlio bloccato
-	
-		sem_v(sem_wait_data, i);
-		
-		// aspetta che il figlio li abbia letti
-	
-		sem_p(sem_parent, 2);
-    }
-        
-    
-    int i;
-	for(i = 0; i < NPROC; i++)
-    {
-    	
-    
-		if(!free_child[i])
-		{
-			// attende che abbia finito il calcolo
-	
-    		sem_p(sem_computing, i);
-    		
-			// richiede eventuali dati precedenti
-	
-    		sem_v(sem_request_result, i);
-    		
-			//aspetta che i dati siano pronti da leggere
-	
-    		sem_p(sem_parent, 1);
-    		
-	
-    		results[current_result->id] = current_result->val;
-		}
-	
-		//termina processo 
-	 
-		current_operation->operator = 'k';
-				
-		// libera il figlio bloccato
-	
-		sem_v(sem_wait_data, i);
-		
-		// aspetta che il figlio abbia letto
-	
-		sem_p(sem_parent, 2);
-	}
-
-	
-	for(i = 0; i < n_operations; i++)
-    {
-        char res[20];
-        sprintf(res, "%.2f\n", results[i]);                 // NON SONO SICURO SI POSSA USARE SPRINTF
-        int count = (int) write(STDOUT, res, strlen(res));
-        if (count == -1)
-            syserr ("res", "write() failure");
-        
-        
-    	//printf("result: %.2f\n", results[i]);
-    }
-    
-    xfree(childs_started);
-    xfree(current_operation);
-    xfree(current_result);
-    xfree(free_child);
-    free(childs_pid); 
-	
-}
-
-void child()
-{
-    float res; // result of operations
-    
-  	sem_p(sem_parent, 0); 
-    (*childs_started)++;
-    
-    
-    if(*childs_started == NPROC)
-    	sem_v(sem_parent, 1);
-	
-    sem_v(sem_parent, 0);
-    
-    while(true)
-    {
-        free_child[id_number] = true;
-        
-        // si mette in attesa di essere chiamato per il calcolo
-      
-        sem_p(sem_wait_data, id_number);
-        
-        
-        free_child[id_number] = false;
-        
-        
-        // legge i dati
-      
-        int val1 = current_operation->val1;
-        int val2 = current_operation->val2;
-        char op = current_operation->operator; 
-        int op_id = current_operation->id;
-        
-        // avvisa che ho finito di leggere
-      
-        sem_v(sem_parent, 2);
-        
-        
-        // termina col comando k
-        if(op == 'k'){
-     
-            exit(0);
-        }
-        
-        
-        // calcola
-        res = process_operation(val1, val2, op);
-        
-        // avvisa di aver terminato il calcolo
-        sem_v(sem_computing, id_number); // calcolo terminato
-        
-        // attende che il padre richieda i dati
-        sem_p(sem_request_result, id_number);
-        
-        // scrivi risultato calcolo
-        current_result->val = res;
-        current_result->id = op_id;
-        
-        // dice al padre che i dati sono pronti per essere letti
-        sem_v(sem_parent, 1);
-    }
 }
 
 

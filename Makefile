@@ -1,5 +1,5 @@
 # Sources:
-SRCS:=ipc_calculator.c mylib.c utils.c
+SRCS:=ipc_calculator.c mylib.c utils.c parent.c child.c
 
 # Objects:
 OBJS:=$(SRCS:.c=.o)
@@ -26,8 +26,16 @@ ipc_calculator.x: $(OBJS)
 utils.o: utils.c utils.h
 	@echo $@
 	@$(CC) $(CFLAGS) -o $@ $<
+	
+parent.o: parent.c parent.h
+	@echo $@
+	@$(CC) $(CFLAGS) -o $@ $<
+	
+child.o: child.c child.h
+	@echo $@
+	@$(CC) $(CFLAGS) -o $@ $<
 
-ipc_calculator.o: ipc_calculator.c mylib.h utils.h
+ipc_calculator.o: ipc_calculator.c mylib.h utils.h parent.h child.h
 	@echo $@
 	@$(CC) $(CFLAGS) -o $@ $<
 

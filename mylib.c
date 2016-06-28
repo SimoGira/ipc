@@ -10,11 +10,10 @@
  SCOPO: libreria di funzioni d’utilita'
 ******************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-
 #include "mylib.h"
+#include "utils.h"
+#include "parent.h"
+#include "child.h"
 
 /** @brief Gets the result of related operations.
  * @param val1 operand 1.
@@ -114,17 +113,47 @@ void list_free(struct list *this){
     }
 }
 
+void print(const char *msg, int line){
+    int count = (int) write(STDOUT, msg, strlen(msg));
+    if (count == -1){
+        char line_str[20];
+        sprintf(line_str ,"%d" , line);
+        syserr (line_str, "print() failure");
+    }
+}
+
 void syserr(char *prog, char *msg){
-    fprintf(stderr, "%s - \e[91merror\e[0m: %s\n",prog, msg);
-    perror("system error");
+    //fprintf(stderr, "%s - \e[91merror\e[0m: %s\n",prog, msg);  // non si può usare
+    //perror("system error");
+    char *str_temp = strcat(prog, "- \e[91msystem error\e[0m: ");
+    str_temp = strcat(str_temp, msg);
+    perror(str_temp);
     exit(1);
 }
 
 
 void syserr_ext(char *prog, char *msg, int line){
-    fprintf(stderr, "%s | line: %d | \e[91merror\e[0m: %s\n",prog, line, msg);
-    perror("system error");
+    //fprintf(stderr, "%s | line: %d | \e[91merror\e[0m: %s\n",prog, line, msg);  // non si può usare
+    //perror("system error");
+
+    char line_str[20];
+    sprintf(line_str ,"%d" , line);
+    char *str_temp = strcat(prog, " | line: ");
+    str_temp = strcat(str_temp, line_str);
+    str_temp = strcat(str_temp, " | \e[91merror\e[0m ");
+    str_temp = strcat(str_temp, msg);
+    perror(str_temp);
+     
     exit(1);
+     
 }
+
+
+
+
+
+
+
+
 
 
