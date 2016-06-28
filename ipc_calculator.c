@@ -5,37 +5,35 @@
 //  Created by Simone Girardi on 13/05/16.
 //  Copyright © 2016 Simone Girardi. All rights reserved.
 //
-
 #include "mylib.h"
 #include "utils.h"
 #include "parent.h"
 #include "child.h"
+
 #define CALLER "ipc_calculator.c"
 #define PARENT "[\033[38;5;208mParent\033[m]"
 
-int sem_parent;
-int sem_request_result;
-int sem_computing;
-int sem_wait_data;
-
-struct operation *operations;
-bool * child_isFree;
-int id_number = -1;
-int n_operations = -1;
-int NPROC = 0;
-int* childs_started;
-
-const int SHM_COP = 101;
-const int SHM_RES = 102;
-const int SHM_STATUS = 103;
-const int SHM_STARTED = 104;
-
-struct operation *current_operation;
-struct result* current_result;
-
-
-
 int main(int argc, char *argv[]){
+    
+    int sem_parent;
+    int sem_request_result;
+    int sem_computing;
+    int sem_wait_data;
+    
+    struct operation *operations;
+    struct operation *current_operation;
+    struct result* current_result;
+    
+    bool *child_isFree;
+    int id_number = -1;
+    int n_operations = -1;
+    int NPROC = 0;
+    int *childs_started;
+    
+    const int SHM_COP = 101;
+    const int SHM_RES = 102;
+    const int SHM_STATUS = 103;
+    const int SHM_STARTED = 104;
     
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\e[7;36m            IPC CALCULATOR             \e[0m\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", CALLER, __LINE__);
     
@@ -86,40 +84,24 @@ int main(int argc, char *argv[]){
         syserr (argv[0], "file is empty!");
     }
     
-    n_operations = line_count - 1;  // becouse the first line isn't an operation
+    // the first line isn't an operation
+    n_operations = line_count - 1;
     
-    NPROC = atoi(first_element->value);         // number of process to create
+    // number of process to create
+    NPROC = atoi(first_element->value);
     
+    // allocate memory for operations
     operations = (struct operation*)malloc(sizeof(struct operation)*n_operations);
-    
     
     // take first element of this list as the first operation
     struct list* list = first_element->next;
-    i = 0;
-    while (list != NULL)
-    {
-        
-        char* id = strtok(list->value, " ");
-        char* val1 = strtok(NULL, " ");         /* NULL must be used to get tokens from the previous string now */
-        char* op = strtok(NULL, " ");
-        char* val2  = strtok(NULL, " ");
-        
-        if(val1 == NULL || op == NULL || val2 == NULL)
-            syserr (argv[0], "Wrong operation format");
-        
-        operations[i].id = atoi(id) - 1;
-        operations[i].val1 = atoi(val1);
-        operations[i].val2 = atoi(val2);
-        operations[i].operator = op[0];
-        i++;
-        
-        list = list->next;
-    }
+    
+    // fill the list with operations (atoi() for numbers)
+    fill_list_operations(list, operations);
     
     // free the lines memory
     list_free(first_element);
     first_element = NULL;
-    
     
     // ------------------------------------------------------------------------------------------------------------
     //                                                SETUP - SEMAPHORE
@@ -200,6 +182,7 @@ int main(int argc, char *argv[]){
         }
     }
     
+    /* execute from parent */
     if(pid != 0)
     {
         float *results = my_parent(my_semaphores, n_operations, NPROC, childs_started, operations, current_operation, current_result, child_isFree);
@@ -237,6 +220,3 @@ int main(int argc, char *argv[]){
     }
     return 0;
 }
-
-
-

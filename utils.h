@@ -9,13 +9,27 @@
 #ifndef utils_h
 #define utils_h
 
-#include "mylib.h"
+#include <stdbool.h>
+#include <sys/sem.h>
+#include <fcntl.h>  /* for open() etc */
+//#include <signal.h> /* for siganls - pipe - fifo */
+
+/* explicit declaration required for others OS */
+#ifndef __APPLE__
+union semun
+{
+    int val;                // value for SETVAL
+    struct semid_ds* buf;   // buffer for IPC_STAT, IPC_SET
+    unsigned short*  array; // array for GETALL, SETALL
+    struct seminfo*  __buf; // buffer for IPC_INFO
+};
+#endif
 
 typedef struct XMem {
     key_t key ;
     int shmid ;
     char buf [1];
-} XMem ;
+} XMem;
 
 struct operation{
     int id;

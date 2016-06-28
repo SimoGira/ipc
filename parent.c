@@ -9,7 +9,6 @@
 #include "parent.h"
 #include "mylib.h"
 #include "utils.h"
-#include "child.h"
 
 #define CALLER "parent.c"
 #define PARENT "[\033[38;5;208mParent\033[m]"

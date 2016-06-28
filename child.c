@@ -8,7 +8,6 @@
 
 #include "child.h"
 #include "mylib.h"
-#include "parent.h"
 #include "utils.h"
 #define CALLER "child.c"
 
