@@ -10,6 +10,7 @@
 #define child_h
 
 #include "mylib.h"
+#include "utils.h"
 
 //void mychild();
 

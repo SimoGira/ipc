@@ -10,6 +10,7 @@
 #define parent_h
 
 #include "mylib.h"
+#include "utils.h"
 
 float *my_parent(int my_semaphores[], int n_operations, int NPROC, int *childs_started, struct operation *operations, struct operation *current_operation, struct result *current_result, bool child_isFree[]);
 

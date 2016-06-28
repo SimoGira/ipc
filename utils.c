@@ -60,9 +60,70 @@ void delete_sem(int semid){
 // ============================================================================================================
 //                                               FUNCTIONS FOR - SHARED MEMORY
 // ============================================================================================================
+// Usage: int * xi = ( int *) xmalloc ( ftok ( argv [0] , ’a ’) , sizeof ( int ) * 8);
+void * xmalloc ( key_t key , const size_t size ) {
+    const int shmid = shmget ( key , size + sizeof ( XMem ) - sizeof ( char ) , 0666| IPC_CREAT );
+    if ( shmid == -1)
+        syserr ("xmalloc", "shmget");
+    
+    XMem * ret = ( XMem *) shmat ( shmid , NULL , 0);
+    if ( ret == ( void *) -1)
+        syserr ("xmalloc", "shmat");
+    
+    ret->key = key ;
+    ret->shmid = shmid ;
+    return ret-> buf ;
+}
 
+// ------------------------------------------------------------------------------------------------------------
+void * xattach ( key_t key , const size_t size ) {
+    const int shmid = shmget ( key , size , 0);
+    if ( shmid == -1)
+        syserr ("xattach", "shmget");
+    void * ret = shmat ( shmid , NULL , 0);
+    if ( ret == ( void *) -1)
+        syserr ("xattach", "shmat");
+    return ret;
+}
 
+// ------------------------------------------------------------------------------------------------------------
+// Usage: xfree ( my_pointer );
+void xfree ( void * ptr ) {
+    XMem tmp ;
+    XMem * mem = ( XMem *)((( char *) ptr ) - ((( char *)& tmp.buf ) - (( char *)& tmp.key )));
+    const int shmid = mem-> shmid ;
+    shmdt ( mem );
+    shmctl ( shmid , IPC_RMID , NULL );
+}
 
+// ============================================================================================================
+//                                               FUNCTIONS FOR - OTHER
+// ============================================================================================================
+/** @brief Gets the result of related operations.
+ * @param val1 operand 1.
+ * @param op the operator
+ * @param val2 operand 2
+ * @return result of operations.*/
+float process_operation(int val1, int val2, char op){
+    switch (op) {
+        case '+':
+            return (float)val1 + val2;
+            break;
+        case '-':
+            return (float)val1 - val2;
+            break;
+        case '*':
+            return (float)val1 * val2;
+            break;
+        case '/':
+            return (float)val1 / val2;
+            break;
+        default:
+            syserr("process operation() ", "not valid operator");
+            break;
+    }
+    return -1;
+}
 
 
 

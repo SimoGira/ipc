@@ -43,43 +43,18 @@ union semun
 };
 #endif
 
-struct operation{
-    int id;
-    int val1;
-    int val2;
-    char operator;
-};
-
-struct result {
-    int id;
-    float val;
-};
-
-typedef struct XMem {
-	key_t key ;
-	int shmid ;
-	char buf [1];
-} XMem ;
-
-void * xmalloc ( key_t key , const size_t size );
-void xfree(void * address);
-void * xattach ( key_t key , const size_t size );
-
-
-void syserr(char *prog, char *msg);
-void syserr_ext(char *prog, char *msg, int line);
-
 struct list{
     char* value;
     struct list *next;
 };
+
+void syserr(char *prog, char *msg);
+void syserr_ext(char *prog, char *msg, int line);
  
 struct list *list_create(char* value);
 struct list *list_add(char* value, struct list *next);
 void list_free(struct list *first_element);
 void list_print(struct list *this);
-
-float process_operation(int val1, int val2, char op);
 
 void print(const char* msg, const char*caller, int line);
 
