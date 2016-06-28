@@ -1,5 +1,5 @@
 /**
- * @file child.h
+ * @file child.c
  * @author Simone Girardi
  * @date 27 jun 2016.
  * @version 1.0

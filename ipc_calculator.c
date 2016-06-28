@@ -1,15 +1,9 @@
-//
-//  ipc_calculator.c
-//  IPC project
-//
-//  Created by Simone Girardi on 13/05/16.
-//  Copyright © 2016 Simone Girardi. All rights reserved.
-//
 
-/*
- @file    ipc_calculator.c
- @author  Simone, s.girardi92@gmail.com
- @version 1.0
+/**
+ * @file ipc_calculator.c
+ * @author Simone Girardi
+ * @date 27 jun 2016.
+ * @version 1.0
  */
 
 #include "mylib.h"

@@ -1,15 +1,9 @@
-//
-//  mylib.c
-//
-//
-//  Created by Simone Girardi on 13/05/16.
-//
-//
 
-/*
- @file    mylib.c
- @author  Simone, s.girardi92@gmail.com
- @version 1.0
+/**
+ * @file mylib.c
+ * @author Simone Girardi
+ * @date 27 jun 2016.
+ * @version 1.0
  */
 
 #include "mylib.h"
@@ -27,6 +21,7 @@ struct list *list_create(char* value){
     return new;
 }
 
+// ------------------------------------------------------------------------------------------------------------
 struct list *list_add(char* value, struct list *previous){
 	if(previous == NULL) 
          syserr ("list_add", "previous list element is NULL!");
@@ -76,6 +71,7 @@ void list_free(struct list *this){
     }
 }
 
+// ------------------------------------------------------------------------------------------------------------
 void syserr(char *prog, char *msg){
     //fprintf(stderr, "%s - \e[91merror\e[0m: %s\n",prog, msg);  // non si può usare
     //perror("system error");
@@ -113,13 +109,5 @@ void print(const char* msg, const char*caller, int line){
     }
     fflush(stdout);
 }
-
-
-
-
-
-
-
-
 
 

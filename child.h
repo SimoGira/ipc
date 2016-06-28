@@ -13,7 +13,8 @@
 #include "utils.h"
 
 /**
- * Every child call this function and it exec the operation gived from parent
+ * @brief Every child call this function and it exec the operation gived from parent
+ *
  * @param id_number the id of child process
  * @param NPROC the number of processes
  * @param my_semaphores the array of semaphores
@@ -26,23 +27,27 @@
 void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, struct operation *current_operation, struct result *current_result, bool child_isFree[]);
 
 
-/** This function is used to print the status of the current child process in execution
- @param info the information to print on STDOUT
- @param id_number the id of child process
- @see print_operation_info
- @return void
+/** 
+ * @brief This function is used to print the status of the current child process in execution
+ * @param info the information to print on STDOUT
+ * @param id_number the id of child process
+ * @see print_operation_info
+ * @see print
+ * @return void
  */
 void print_child_info(const char *info, int id_number);
 
 
-/** This function is used to print the status of the current operation managed from a child process
- @param info the information to print on STDOUT
- @param id_number the id of child process
- @param val1 the first operand of operation
- @param val2 the first operand of operation
- @param op the operator of operation
- @see print_child_info
- @return void
+/** 
+ * @brief This function is used to print the status of the current operation managed from a child process
+ * @param info the information to print on STDOUT
+ * @param id_number the id of child process
+ * @param val1 the first operand of operation
+ * @param val2 the first operand of operation
+ * @param op the operator of operation
+ * @see print_child_info
+ * @see print
+ * @return void
  */
 void print_operation_info(const char *info, int id_number, int val1, char op, int val2);
 

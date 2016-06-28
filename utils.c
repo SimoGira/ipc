@@ -1,20 +1,16 @@
-//
-//  utils.c
-//
-//
-//  Created by Simone Girardi on 21/06/16.
-//
-//
+
+/**
+ * @file utils.c
+ * @author Simone Girardi
+ * @date 27 jun 2016.
+ * @version 1.0
+ */
 
 #include "utils.h"
 #include "mylib.h"
 #include "parent.h"
 #include "child.h"
-/*
- @file    utlis.c
- @author  Simone, s.girardi92@gmail.com
- @version 1.0
- */
+
 
 /******************************************
  MODULO: utils.c
@@ -26,7 +22,7 @@
 // ============================================================================================================
 int do_semget(key_t key, int NPROC){
     int semid;
-    if (( semid = semget ( key, NPROC, IPC_CREAT | 0777)) == -1)
+    if (( semid = semget(key, NPROC, IPC_CREAT | 0777)) == -1)
         syserr_ext ("do_semget()", " semget " , __LINE__);
     return semid;
 }
@@ -71,12 +67,12 @@ void delete_sem(int semid){
 //                                               FUNCTIONS FOR - SHARED MEMORY
 // ============================================================================================================
 // Usage: int * xi = ( int *) xmalloc ( ftok ( argv [0] , ’a ’) , sizeof ( int ) * 8);
-void * xmalloc ( key_t key , const size_t size ) {
+void *xmalloc( key_t key , const size_t size ) {
     const int shmid = shmget ( key , size + sizeof ( XMem ) - sizeof ( char ) , 0666| IPC_CREAT );
     if ( shmid == -1)
         syserr ("xmalloc", "shmget");
     
-    XMem * ret = ( XMem *) shmat ( shmid , NULL , 0);
+    XMem *ret = ( XMem *) shmat ( shmid , NULL , 0);
     if ( ret == ( void *) -1)
         syserr ("xmalloc", "shmat");
     
@@ -86,21 +82,21 @@ void * xmalloc ( key_t key , const size_t size ) {
 }
 
 // ------------------------------------------------------------------------------------------------------------
-void * xattach ( key_t key , const size_t size ) {
-    const int shmid = shmget ( key , size , 0);
-    if ( shmid == -1)
-        syserr ("xattach", "shmget");
-    void * ret = shmat ( shmid , NULL , 0);
-    if ( ret == ( void *) -1)
-        syserr ("xattach", "shmat");
+void * xattach( key_t key , const size_t size ) {
+    const int shmid = shmget( key, size , 0);
+    if (shmid == -1)
+        syserr("xattach", "shmget");
+    void * ret = shmat(shmid , NULL , 0);
+    if (ret == (void *) -1)
+        syserr("xattach", "shmat");
     return ret;
 }
 
 // ------------------------------------------------------------------------------------------------------------
-// Usage: xfree ( my_pointer );
+// Usage: xfree( my_pointer );
 void xfree ( void * ptr ) {
     XMem tmp ;
-    XMem * mem = ( XMem *)((( char *) ptr ) - ((( char *)& tmp.buf ) - (( char *)& tmp.key )));
+    XMem * mem = ( XMem *)((( char *) ptr ) - ((( char *)&tmp.buf ) - (( char *)& tmp.key )));
     const int shmid = mem-> shmid ;
     shmdt ( mem );
     shmctl ( shmid , IPC_RMID , NULL );

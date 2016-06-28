@@ -1,5 +1,5 @@
 /**
- * @file parent.h
+ * @file parent.c
  * @author Simone Girardi
  * @date 27 jun 2016.
  * @version 1.0
@@ -136,13 +136,13 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, int *childs_s
 //----------------------------------------------------------------------------------------------------------------
 int get_first_free_child(int NPROC, bool child_isFree[])
 {
-    int i;
+    int child_id;
     while (1) {
-        for(i = 0; i < NPROC; i++)
+        for(child_id = 0; child_id < NPROC; child_id++)
         {
-            if(child_isFree[i]){
-                print_parent_info(""PARENT" the first free child have id %d\n", i+1);
-                return i;
+            if(child_isFree[child_id]){
+                print_parent_info(""PARENT" the first free child have id %d\n", child_id+1);
+                return child_id;
             }
         }
         sleep(1);
