@@ -20,10 +20,10 @@
 // ============================================================================================================
 //                                               FUNCTIONS FOR - SEMAPHORE
 // ============================================================================================================
-int do_semget(key_t key, int NPROC){
+int do_semget(key_t key, int nsems){
     int semid;
-    if (( semid = semget(key, NPROC, IPC_CREAT | 0777)) == -1)
-        syserr_ext ("do_semget()", " semget " , __LINE__);
+    if (( semid = semget(key, nsems, IPC_CREAT | 0777)) == -1)
+        syserr_ext ("utils.c", " semget " , __LINE__);
     return semid;
 }
 
@@ -33,9 +33,8 @@ void initialize_sem(int semid, union semun *semarg, unsigned short values[]){
     semarg->array = values;
     
     if ( semctl(semid, 0, SETALL, *semarg) == -1){
-        syserr_ext ("initialize_sem()" , "semctl",  __LINE__);
+        syserr_ext ("utils.c" , "semctl",  __LINE__);
     }
-    
 }
 
 // ------------------------------------------------------------------------------------------------------------
@@ -60,7 +59,7 @@ void sem_p(int semid, int num)
 // ------------------------------------------------------------------------------------------------------------
 void delete_sem(int semid){
     if (semctl(semid, 0, IPC_RMID, NULL) == -1)
-        syserr("delete_sem()", "Error deleting a semaphore");
+        syserr_ext ("utils.c" , "semctl",  __LINE__);
 }
 
 // ============================================================================================================
@@ -72,24 +71,14 @@ void *xmalloc( key_t key , const size_t size ) {
     if ( shmid == -1)
         syserr ("xmalloc", "shmget");
     
-    XMem *ret = ( XMem *) shmat ( shmid , NULL , 0);
+    /* When a segment of shared memory has been create it must be linket to data area of the the processes that want to use it. */
+    XMem *ret = ( XMem *) shmat( shmid , NULL , 0);
     if ( ret == ( void *) -1)
         syserr ("xmalloc", "shmat");
     
     ret->key = key ;
     ret->shmid = shmid ;
     return ret-> buf ;
-}
-
-// ------------------------------------------------------------------------------------------------------------
-void * xattach( key_t key , const size_t size ) {
-    const int shmid = shmget( key, size , 0);
-    if (shmid == -1)
-        syserr("xattach", "shmget");
-    void * ret = shmat(shmid , NULL , 0);
-    if (ret == (void *) -1)
-        syserr("xattach", "shmat");
-    return ret;
 }
 
 // ------------------------------------------------------------------------------------------------------------
@@ -105,11 +94,6 @@ void xfree ( void * ptr ) {
 // ============================================================================================================
 //                                               FUNCTIONS FOR - OTHER
 // ============================================================================================================
-/** @brief Gets the result of related operations.
- * @param val1 operand 1.
- * @param op the operator
- * @param val2 operand 2
- * @return result of operations.*/
 float process_operation(int val1, int val2, char op){
     switch (op) {
         case '+':

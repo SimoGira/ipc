@@ -19,7 +19,10 @@
 
 #include "utils.h"
 
+/** STDIN constant for stdin */
 #define STDIN 0
+
+/** STDOUT constant for stdout */
 #define STDOUT 1
 
 
@@ -29,8 +32,8 @@
  * This list is used to save the content of file configuration, every element of the list is a line of the file
  */
 struct list{
-    char* value;
-    struct list *next;
+    char* value;        /**< the value of list element #value */
+    struct list *next;  /**< the pointer to the next list element #next */
 };
 
 /**

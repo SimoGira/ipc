@@ -9,7 +9,10 @@
 #include "mylib.h"
 #include "utils.h"
 
+/** CALLER defines from which file a specific function is called */
 #define CALLER "parent.c"
+
+/** PARENT defines an orange colored string to perform the print on STDOUT */
 #define PARENT "[\033[38;5;208mParent\033[m]"
 
 /* sem_parent inizialized to {1, 0, 0}:
@@ -17,16 +20,17 @@
  * 1: result_ready
  * 2: data_read */
 
+/** A temporary string used from "print functions" to build a fromatted the string */
 char str_info[100];
 
 float *my_parent(int my_semaphores[], int n_operations, int NPROC, int *childs_started, struct operation *operations, struct operation *current_operation, struct result *current_result, bool child_isFree[]){
     
     float *results = (float*) malloc(sizeof(float) * n_operations);
     
-    int sem_computing = my_semaphores[0];
-    int sem_wait_data = my_semaphores[1];
-    int sem_request_result = my_semaphores[2];
-    int sem_parent = my_semaphores[3];
+    sem_computing = my_semaphores[0];
+    sem_wait_data = my_semaphores[1];
+    sem_request_result = my_semaphores[2];
+    sem_parent = my_semaphores[3];
     
     print(""PARENT" waiting that all childs are ready...\n", CALLER, __LINE__);
     sem_p(sem_parent, 1);

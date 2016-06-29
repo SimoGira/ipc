@@ -11,15 +11,20 @@
 #include "parent.h"
 #include "child.h"
 
+/** CALLER defines from which file a specific function is called */
 #define CALLER "ipc_calculator.c"
+
+/** PARENT defines an orange colored string to perform the print on STDOUT */
 #define PARENT "[\033[38;5;208mParent\033[m]"
 
+/**
+ * @brief the Main of the program
+ * 
+ * @param argc the number of arguments
+ * @param argv the vector of parameter
+ * @return 0
+ */
 int main(int argc, char *argv[]){
-    
-    int sem_parent;
-    int sem_request_result;
-    int sem_computing;
-    int sem_wait_data;
     
     struct operation *operations;
     struct operation *current_operation;

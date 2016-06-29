@@ -8,16 +8,19 @@
 #include "child.h"
 #include "mylib.h"
 #include "utils.h"
+
+/** CALLER defines from which file a specific function is called */
 #define CALLER "child.c"
 
+/** A temporary string used from "print functions" to build a fromatted the string */
 char str_info[100];
 
 void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, struct operation *current_operation, struct result *current_result, bool child_isFree[]){
     
-    int sem_computing = my_semaphores[0];
-    int sem_wait_data = my_semaphores[1];
-    int sem_request_result = my_semaphores[2];
-    int sem_parent = my_semaphores[3];
+     sem_computing = my_semaphores[0];
+     sem_wait_data = my_semaphores[1];
+     sem_request_result = my_semaphores[2];
+     sem_parent = my_semaphores[3];
     
     /* support variable to perform the operation */
     float res;
@@ -65,17 +68,15 @@ void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, s
         
         // avvisa che ho finito di leggere
         
-        print_operation_info("[Child %d] read: %d %c %d\n", id_number,val1,op,val2);
-        
         sem_v(sem_parent, 2);
-        
         
         // termina col comando k
         if(op == 'k'){
-            print_child_info("[Child %d] exiting...\n", id_number);
+            print_child_info("[Child %d] read: 'k' exiting...\n", id_number);
             exit(0);
         }
         
+        print_operation_info("[Child %d] read: %d %c %d\n", id_number,val1,op,val2);
         
         // calcola
         sleep(1);

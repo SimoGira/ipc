@@ -9,6 +9,7 @@
 #include "mylib.h"
 #include "utils.h"
 
+/** CALLER defines from which file a specific function is called */
 #define CALLER "mylib.c"
 
 // ============================================================================================================
