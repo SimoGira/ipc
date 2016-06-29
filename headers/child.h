@@ -18,13 +18,13 @@
  * @param id_number the id of child process
  * @param NPROC the number of processes
  * @param my_semaphores the array of semaphores
- * @param childs_started a strcut pointer for manage started processes
+ * @param childs_ready a strcut pointer for manage started processes
  * @param current_operation a struct pointer for get the current operation
  * @param current_result a struct pointer for save the result of current operation
  * @param child_isFree array for check which child process is free
  * @return void
  */
-void child(int id_number, int NPROC, int my_semaphores[], int *childs_started, struct operation *current_operation, struct result *current_result, bool child_isFree[]);
+void child(int id_number, int NPROC, int my_semaphores[], int *childs_ready, struct operation *current_operation, struct result *current_result, bool child_isFree[]);
 
 
 /** 

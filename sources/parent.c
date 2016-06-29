@@ -5,15 +5,18 @@
  * @version 1.0
  */
 
-#include "parent.h"
-#include "mylib.h"
-#include "utils.h"
+#include "../headers/parent.h"
+#include "../headers/mylib.h"
+#include "../headers/utils.h"
 
-/** CALLER defines from which file a specific function is called */
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+#define RESET   "\e[0m"
+#define ORANGE  "\033[38;5;208m"
+#define PARENT "["ORANGE"Parent"RESET"]"
 #define CALLER "parent.c"
 
-/** PARENT defines an orange colored string to perform the print on STDOUT */
-#define PARENT "[\033[38;5;208mParent\033[m]"
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 /* sem_parent inizialized to {1, 0, 0}:
  * 0: mutex
@@ -23,7 +26,7 @@
 /** A temporary string used from "print functions" to build a fromatted the string */
 char str_info[100];
 
-float *my_parent(int my_semaphores[], int n_operations, int NPROC, int *childs_started, struct operation *operations, struct operation *current_operation, struct result *current_result, bool child_isFree[]){
+float *my_parent(int my_semaphores[], int n_operations, int NPROC, struct operation *operations, struct operation *current_operation, struct result *current_result, bool child_isFree[]){
     
     float *results = (float*) malloc(sizeof(float) * n_operations);
     
@@ -32,52 +35,36 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, int *childs_s
     sem_request_result = my_semaphores[2];
     sem_parent = my_semaphores[3];
     
+    
     print(""PARENT" waiting that all childs are ready...\n", CALLER, __LINE__);
     sem_p(sem_parent, 1);
-    sleep(NPROC);
     
     int i;
-    int op_id; // operation number "op_id"
+    int op_id; // the operation number "op_id"
     for(op_id = 0; op_id < n_operations; op_id++)
     {
         
         // preleva l'id del figlio da liberare
-
+        
         i = operations[op_id].id;
         print_parent_info(""PARENT" next operation is for child %d\n", i);
         
-        /* -1 corresponds to 0 from the specifics */
-        if(i == -1){
+        /* -1 corresponds to 0 of the specifics of the project */
+        if(i == -1)
+        {
             print(""PARENT" searching for the first free child..\n",CALLER, __LINE__);
             i = get_first_free_child(NPROC, child_isFree);
+            print_parent_info(""PARENT" the first free child have id %d\n", i);
         }
         
-        
         /* only if child is busy */
-        if(!child_isFree[i])
-        {
-            // attende che abbia finito il calcolo
-            print_parent_info(""PARENT" waiting that child %d finish to process the operation\n", i);
+        if(!child_isFree[i]) {
             
-            sem_p(sem_computing, i);
-            
-            // richiede eventuali dati precedenti
-            print(""PARENT" request the result...\n",CALLER, __LINE__);
-            sleep(1);
-            
-            sem_v(sem_request_result, i);
-            
-            //aspetta che i dati siano pronti da leggere
-            print_parent_info(""PARENT" waiting for result from child %d ...\n", i);
-            
-            sem_p(sem_parent, 1);
-            
-            
-            results[current_result->id] = current_result->val;
+            /* call the busy child routine and save the returned result */
+            results[current_result->id] = busy_child_routine(i, current_result);
         }
         
         // inserisce i dati della prossima operazione
-        print(""PARENT" insert data for the next operation\n",CALLER, __LINE__);
         
         current_operation->id = op_id;
         current_operation->val1 = operations[op_id].val1;
@@ -95,30 +82,19 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, int *childs_s
         sem_p(sem_parent, 2);
     }
     
-    print(""PARENT" finish to send operations\n",CALLER, __LINE__);
+    print(""PARENT" finish to send all operations\n",CALLER, __LINE__);
     
     for(i = 0; i < NPROC; i++)
     {
-        
-        if(!child_isFree[i])
-        {
-            // attende che abbia finito il calcolo
+        /* only if child is busy */
+        if(!child_isFree[i]) {
             
-            sem_p(sem_computing, i);
-            
-            // richiede eventuali dati precedenti
-            
-            sem_v(sem_request_result, i);
-            
-            //aspetta che i dati siano pronti da leggere
-            
-            sem_p(sem_parent, 1);
-            
-            /* save the result */
-            results[current_result->id] = current_result->val;
+            /*  call the busy child routine and save the returned result */
+            results[current_result->id] = busy_child_routine(i, current_result);
         }
         
         //termina processo
+        print_parent_info(""PARENT" killing child %d...\n", i);
         
         current_operation->operator = 'k';
         
@@ -129,29 +105,50 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, int *childs_s
         // aspetta che il figlio abbia letto
         
         sem_p(sem_parent, 2);
+        
+        //wait(NULL);  < ================================================ DA PROVARE !!!!!!
     }
     
     print_results(results , n_operations);
     
     return results;
-    
 }
 
 //----------------------------------------------------------------------------------------------------------------
 int get_first_free_child(int NPROC, bool child_isFree[])
 {
     int child_id;
-    while (1) {
-        for(child_id = 0; child_id < NPROC; child_id++)
-        {
-            if(child_isFree[child_id]){
-                print_parent_info(""PARENT" the first free child have id %d\n", child_id+1);
-                return child_id;
-            }
+    for(child_id = 0; child_id < NPROC; child_id++) {
+        
+        if(child_isFree[child_id]){
+            return child_id;
         }
-        sleep(1);
-        /*  try again */
     }
+    /* if all childs are busy we assume that the fisrt free child will have id "1" */
+    return 0;
+}
+
+
+//----------------------------------------------------------------------------------------------------------------
+float busy_child_routine(int child_id, struct result *current_result){
+    
+    // attende che abbia finito il calcolo
+    print_parent_info(""PARENT" waiting that child %d finish to process the operation\n", child_id);
+    
+    sem_p(sem_computing, child_id);
+    
+    // richiede eventuali dati precedenti
+    print_parent_info(""PARENT" request the result to child %d\n", child_id);
+    
+    sem_v(sem_request_result, child_id);
+    
+    //aspetta che i dati siano pronti da leggere
+    print_parent_info(""PARENT" waiting for result from child %d ...\n", child_id);
+    
+    sem_p(sem_parent, 1);
+    
+    print_parent_info(""PARENT" saving the result of opration processed from child %d...\n", child_id);
+    return current_result->val;
 }
 
 //----------------------------------------------------------------------------------------------------------------
@@ -164,7 +161,7 @@ void print_parent_info(const char *info, int child_id){
 
 //----------------------------------------------------------------------------------------------------------------
 void print_results(float results[] , int n_operations){
-    print("-------------------------------------\n "PARENT" write results to STDOUT\n-------------------------------------\n",CALLER, __LINE__);
+    print("-------------------------------------\n "PARENT" write results on STDOUT\n-------------------------------------\n",CALLER, __LINE__);
     char res[20];
     int i;
     

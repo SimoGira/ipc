@@ -9,6 +9,7 @@ elif [[ $1 == "compilerun" || $1 == "cr" ]]; then
 	./a.out
 	
 elif [[ $1 == "push" ]]; then
+    cd ..
 	git status
 	git add --all
 	git commit -m "update"

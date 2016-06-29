@@ -6,11 +6,17 @@
  * @version 1.0
  */
 
-#include "mylib.h"
-#include "utils.h"
+#include "../headers/mylib.h"
+#include "../headers/utils.h"
 
-/** CALLER defines from which file a specific function is called */
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+#define RED     "\033[31m"
+#define RESET   "\e[0m"
 #define CALLER "mylib.c"
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+
 
 // ============================================================================================================
 //                                                FUNCTIONS FOR - LISTS
@@ -60,6 +66,7 @@ void fill_list_operations(struct list *list, struct operation *operations){
 void list_print(struct list *this){
     if (this != NULL) {
         print(this->value, CALLER, __LINE__);
+        print("\n",CALLER, __LINE__);
         list_print(this->next);
     }
 }
@@ -76,7 +83,7 @@ void list_free(struct list *this){
 void syserr(char *prog, char *msg){
     //fprintf(stderr, "%s - \e[91merror\e[0m: %s\n",prog, msg);  // non si può usare
     //perror("system error");
-    char *str_temp = strcat(prog, "- \e[91msystem error\e[0m: ");
+    char *str_temp = strcat(prog, "- "RED"error"RESET": ");
     str_temp = strcat(str_temp, msg);
     perror(str_temp);
     exit(1);
@@ -93,7 +100,7 @@ void syserr_ext(char *prog, char *msg, int line){
     sprintf(line_str ,"%d" , line);
     char *str_temp = strcat(prog, " | line: ");
     str_temp = strcat(str_temp, line_str);
-    str_temp = strcat(str_temp, " | \e[91merror\e[0m ");
+    str_temp = strcat(str_temp, " | "RED"error"RESET" ");
     str_temp = strcat(str_temp, msg);
     perror(str_temp);
      

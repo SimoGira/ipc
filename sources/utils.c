@@ -6,10 +6,10 @@
  * @version 1.0
  */
 
-#include "utils.h"
-#include "mylib.h"
-#include "parent.h"
-#include "child.h"
+#include "../headers/utils.h"
+#include "../headers/mylib.h"
+#include "../headers/parent.h"
+#include "../headers/child.h"
 
 
 /******************************************

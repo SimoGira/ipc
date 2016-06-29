@@ -6,16 +6,20 @@
  * @version 1.0
  */
 
-#include "mylib.h"
-#include "utils.h"
-#include "parent.h"
-#include "child.h"
+#include "../headers/mylib.h"
+#include "../headers/utils.h"
+#include "../headers/parent.h"
+#include "../headers/child.h"
 
-/** CALLER defines from which file a specific function is called */
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+#define GREEN   "\033[32m"
+#define RESET   "\e[0m"
+#define ORANGE  "\033[38;5;208m"
+#define PARENT "["ORANGE"Parent"RESET"]"
 #define CALLER "ipc_calculator.c"
 
-/** PARENT defines an orange colored string to perform the print on STDOUT */
-#define PARENT "[\033[38;5;208mParent\033[m]"
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 /**
  * @brief the Main of the program
@@ -34,29 +38,31 @@ int main(int argc, char *argv[]){
     int id_number = -1;
     int n_operations = -1;
     int NPROC = 0;
-    int *childs_started;
+    int *childs_ready;
     
     const int SHM_COP = 101;
     const int SHM_RES = 102;
     const int SHM_STATUS = 103;
     const int SHM_STARTED = 104;
     
-    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\e[7;36m            IPC CALCULATOR             \e[0m\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", CALLER, __LINE__);
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+          "\e[7;36m            IPC CALCULATOR             \e[0m\n"
+          "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", CALLER, __LINE__);
     
-    // ============================================================================================================
+    // ==========================================================================================================
     //                                                SETUP - FROM FILE
-    // ============================================================================================================
+    // ==========================================================================================================
     int fd = open("config.txt",O_RDONLY|O_SYNC, S_IRUSR);
     if (fd < 0) {
         syserr (argv[0], "open() failure");
     }
     
-    char line[50];
+    char line[50]; // <--- pass as & and in arg will be **
     int ret_val;
-    int line_count = 0;
+    int line_count = 0; // <----- pass as & and in arg will be *
     int i = 0;
-    struct list* first_element = NULL;
-    struct list* last_element = NULL;
+    struct list* first_element = NULL;  // <---- pass in arg will be *
+    struct list* last_element = NULL;   // <---- pass in arg will be *
     
     while ((ret_val = (int) read(fd, &line[i], 1)) > 0) {             // read byte to byte
         if(line[i] == '\n'){
@@ -90,6 +96,10 @@ int main(int argc, char *argv[]){
         syserr (argv[0], "file is empty!");
     }
     
+    print("The the content of file is the follow:\n", CALLER, __LINE__);
+    /* print the content of file */
+    list_print(first_element);
+    
     // the first line isn't an operation
     n_operations = line_count - 1;
     
@@ -109,9 +119,9 @@ int main(int argc, char *argv[]){
     list_free(first_element);
     first_element = NULL;
     
-    // ------------------------------------------------------------------------------------------------------------
+    // ==========================================================================================================
     //                                                SETUP - SEMAPHORE
-    // ------------------------------------------------------------------------------------------------------------
+    // ==========================================================================================================
     union semun arg; // union to pass to semctl()
     
     unsigned short *sem_init = (unsigned short*) malloc(sizeof(unsigned short) * NPROC);
@@ -148,25 +158,28 @@ int main(int argc, char *argv[]){
     
     int my_semaphores[] = { sem_computing, sem_wait_data, sem_request_result, sem_parent };
     
-    // ------------------------------------------------------------------------------------------------------------
+    // ==========================================================================================================
     //                                                SETUP - SHARED MEMORY
-    // ------------------------------------------------------------------------------------------------------------
+    // ==========================================================================================================
     current_operation = (struct operation*) xmalloc(SHM_COP, sizeof(struct operation));
     current_result = (struct result*) xmalloc(SHM_RES, sizeof(struct result));
     child_isFree = (bool*) xmalloc(SHM_STATUS, sizeof (bool*) * NPROC);
-    childs_started = (int*) xmalloc(SHM_STARTED, sizeof(int));
+    childs_ready = (int*) xmalloc(SHM_STARTED, sizeof(int));
     
     /* initialize all the children as free */
     for(i = 0; i < NPROC; i++)
         child_isFree[i] = true;
     
-    /* initialize the number of childs_started*/
-    *childs_started = 0;
+    /* initialize the number of childs_ready */
+    *childs_ready = 0;
     
     
-    // ------------------------------------------------------------------------------------------------------------
+    // ==========================================================================================================
     //                                                 START - FORK()
-    // ------------------------------------------------------------------------------------------------------------
+    // ==========================================================================================================
+    print("---------------------------------------\n"
+          "           START CALCULATIONS          \n"
+          "---------------------------------------\n", CALLER, __LINE__);
     pid_t pid;
     char str_info[100];
     
@@ -177,24 +190,23 @@ int main(int argc, char *argv[]){
             syserr("fork()", "cannot create a new process");
         } else if (pid == 0) {      // code execute from child
             id_number = i;        // assign id number to child process
-            child(id_number, NPROC, my_semaphores, childs_started, current_operation, current_result, child_isFree);
+            child(id_number, NPROC, my_semaphores, childs_ready, current_operation, current_result, child_isFree);
             break;
         } else {
             if(snprintf(str_info, 100, ""PARENT" create child %d with pid = %d\n" , i+1, pid) == -1){
                 syserr(argv[0], "snprintf() error oversized string");
             }
             print(str_info, CALLER, __LINE__);
-            sleep(1);
         }
     }
     
     /* execute from parent */
     if(pid != 0)
     {
-        float *results = my_parent(my_semaphores, n_operations, NPROC, childs_started, operations, current_operation, current_result, child_isFree);
+        float *results = my_parent(my_semaphores, n_operations, NPROC, operations, current_operation, current_result, child_isFree);
         
         /* free shared memory */
-        xfree(childs_started);
+        xfree(childs_ready);
         xfree(current_operation);
         xfree(current_result);
         xfree(child_isFree);
@@ -223,6 +235,9 @@ int main(int argc, char *argv[]){
         }
         
         close(fd);
+        
+        print("The file \"results.txt\" is written in the sources directory\n", CALLER, __LINE__);
     }
+    print("Program "GREEN"complete"RESET".\n", CALLER, __LINE__);
     return 0;
 }

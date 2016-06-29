@@ -5,9 +5,10 @@ SRCS:=ipc_calculator.c mylib.c utils.c parent.c child.c
 OBJS:=$(SRCS:.c=.o)
 
 # Config:
+HDIR:=../headers/
 CC:=gcc
-CFLAGS:=-c -Wall
-LD:=gcc
+CFLAGS:=-Wall -c 
+LD:=gcc 
 LDFLAGS:=-g
 
 # Default target:
@@ -23,25 +24,22 @@ ipc_calculator.x: $(OBJS)
 	@echo Linking $@
 	@$(LD) $(LDFLAGS) -o $@ $^
 
-utils.o: utils.c utils.h
+utils.o: utils.c  $(HDIR)utils.h
 	@echo $@
 	@$(CC) $(CFLAGS) -o $@ $<
 	
-parent.o: parent.c parent.h
+parent.o: parent.c  $(HDIR)parent.h
 	@echo $@
 	@$(CC) $(CFLAGS) -o $@ $<
 	
-child.o: child.c child.h
+child.o: child.c  $(HDIR)child.h
 	@echo $@
 	@$(CC) $(CFLAGS) -o $@ $<
 
-ipc_calculator.o: ipc_calculator.c mylib.h utils.h parent.h child.h
+ipc_calculator.o: ipc_calculator.c  $(HDIR)mylib.h  $(HDIR)utils.h  $(HDIR)parent.h  $(HDIR)child.h
 	@echo $@
 	@$(CC) $(CFLAGS) -o $@ $<
-
-mylib.h:
-	@echo $@
-	@touch $@
+	
 
 # Collects as dependencies targets which do not match
 # any generated file name (e.g. all, clean).
