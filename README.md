@@ -1,5 +1,5 @@
 # ipc
-This repo contains some project about about **Inter-process communication**
+This repo contains some project about **Inter-process communication**
 
 ###### ipc-calculator
 This is a university project given from my professor of Operative System.
