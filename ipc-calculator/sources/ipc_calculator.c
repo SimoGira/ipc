@@ -95,6 +95,9 @@ int main(int argc, char *argv[]){
     if(first_element == NULL){
         syserr (argv[0], "file is empty!");
     }
+    else if(first_element->value > 400){
+        syserr (argv[0], "NPROC is over limit");
+    }
     
     print("The the content of file is the follow:\n", CALLER, __LINE__);
     /* print the content of file */
