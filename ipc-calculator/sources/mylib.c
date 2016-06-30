@@ -83,7 +83,7 @@ void list_free(struct list *this){
 void syserr(char *prog, char *msg){
     //fprintf(stderr, "%s - \e[91merror\e[0m: %s\n",prog, msg);  // non si può usare
     //perror("system error");
-    char *str_temp = strcat(prog, "- "RED"error"RESET": ");
+    char *str_temp = strcat(prog, " - "RED"error"RESET": ");
     str_temp = strcat(str_temp, msg);
     perror(str_temp);
     exit(1);

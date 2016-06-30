@@ -23,7 +23,7 @@
 
 /**
  * @brief the Main of the program
- * 
+ *
  * @param argc the number of arguments
  * @param argv the vector of parameter
  * @return 0
@@ -95,8 +95,11 @@ int main(int argc, char *argv[]){
     if(first_element == NULL){
         syserr (argv[0], "file is empty!");
     }
-    else if(first_element->value > 400){
-        syserr (argv[0], "NPROC is over limit");
+    
+    // check for the number of processes to create
+    NPROC = atoi(first_element->value);
+    if(NPROC > 500 || NPROC < 0){
+        syserr (argv[0], "NPROC is wrong!");
     }
     
     print("The the content of file is the follow:\n", CALLER, __LINE__);
@@ -105,9 +108,6 @@ int main(int argc, char *argv[]){
     
     // the first line isn't an operation
     n_operations = line_count - 1;
-    
-    // number of process to create
-    NPROC = atoi(first_element->value);
     
     // allocate memory for operations
     operations = (struct operation*)malloc(sizeof(struct operation)*n_operations);
