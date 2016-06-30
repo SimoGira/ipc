@@ -89,9 +89,7 @@ void syserr(char *prog, char *msg){
     exit(1);
 }
 
-// ============================================================================================================
-//                                                FUNCTIONS FOR - STDERR / STDOUT
-// ============================================================================================================
+// ------------------------------------------------------------------------------------------------------------
 void syserr_ext(char *prog, char *msg, int line){
     //fprintf(stderr, "%s | line: %d | \e[91merror\e[0m: %s\n",prog, line, msg);  // non si può usare
     //perror("system error");
@@ -105,6 +103,43 @@ void syserr_ext(char *prog, char *msg, int line){
     perror(str_temp);
      
     exit(1);
+}
+
+// ============================================================================================================
+//                                                FUNCTIONS FOR - STDERR / STDOUT
+// ============================================================================================================
+int read_from_file(int fd, char *line,struct list **first_element, struct list **last_element){
+    int ret_val;
+    int line_count = 0;
+    int i = 0;
+    
+    while ((ret_val = (int) read(fd, line+i, 1)) > 0) {             // read byte to byte
+        
+        if(line[i] == '\n'){
+            line[i] = '\0';
+            
+            line_count++;
+            
+            char * str_temp = (char*) malloc(sizeof(char)*i);
+            strcpy(str_temp, line);                                // save each line in to line array
+            
+            if (*first_element == NULL){
+                *first_element = list_create(str_temp);
+                *last_element = *first_element;
+            }
+            else{
+                *last_element =  list_add(str_temp, *last_element);
+            }
+            
+            i = 0;
+        }
+        else
+            i++;
+    }
+    if (ret_val == -1)
+        syserr ("read_from_file()", "read() failure");
+    
+    return line_count;
 }
 
 // ------------------------------------------------------------------------------------------------------------

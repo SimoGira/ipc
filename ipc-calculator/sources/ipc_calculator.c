@@ -52,48 +52,24 @@ int main(int argc, char *argv[]){
     // ==========================================================================================================
     //                                                SETUP - FROM FILE
     // ==========================================================================================================
-    int fd = open("config.txt",O_RDONLY|O_SYNC, S_IRUSR);
-    if (fd < 0) {
+    int fd;
+    int i = 0;
+    char line[50];
+    int line_count;
+    struct list* first_element = NULL;
+    struct list* last_element = NULL;
+    
+    if((fd = open("config.txt",O_RDONLY|O_SYNC, S_IRUSR)) == -1){
         syserr (argv[0], "open() failure");
     }
     
-    char line[50]; // <--- pass as & and in arg will be **
-    int ret_val;
-    int line_count = 0; // <----- pass as & and in arg will be *
-    int i = 0;
-    struct list* first_element = NULL;  // <---- pass in arg will be *
-    struct list* last_element = NULL;   // <---- pass in arg will be *
-    
-    while ((ret_val = (int) read(fd, &line[i], 1)) > 0) {             // read byte to byte
-        if(line[i] == '\n'){
-            line[i] = '\0';
-            
-            line_count++;
-            
-            char * str_temp = (char*) malloc(sizeof(char)*i);
-            strcpy(str_temp,  line);                                // save each line in to line array
-            
-            if (first_element == NULL){
-                first_element = list_create(str_temp);
-                last_element = first_element;
-            }
-            else{
-                last_element =  list_add(str_temp, last_element);
-            }
-            
-            i = 0;
-        }
-        else
-            i++;
-    }
-    
-    if (ret_val == -1)
-        syserr (argv[0], "read() failure");
+    /* read the content of configuration file */
+    line_count = read_from_file(fd, line, &first_element, &last_element);
     
     close(fd);
     
-    if(first_element == NULL){
-        syserr (argv[0], "file is empty!");
+    if(line_count == 0 || first_element == NULL){
+        syserr (argv[0], "file is empty or wrong formatted!");
     }
     
     // check for the number of processes to create
@@ -229,6 +205,7 @@ int main(int argc, char *argv[]){
         
         // write the results of operations on a file
         char res[20];
+        int ret_val;
         for(i = 0; i < n_operations; i++)
         {
             sprintf(res, "%.2f\n", results[i]);

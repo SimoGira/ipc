@@ -59,6 +59,18 @@ void syserr(char *prog, char *msg);
 void syserr_ext(char *prog, char *msg, int line);
 
 /**
+ * @brief
+ *
+ * @param fd the file descriptor returned from open()
+ * @param line the addresse of a char array to save every char of a line
+ * @param first_element poiter to the first element of a list to save the content of file
+ * @param last_element poiter to the last element of a list to save the content of file
+ * @see list
+ * @return line_count the number of lines read from file
+ */
+int read_from_file(int fd, char *line,struct list **first_element, struct list **last_element);
+
+/**
  * @brief This function create a linked list.
  *
  * @param value the value of the first element of list
