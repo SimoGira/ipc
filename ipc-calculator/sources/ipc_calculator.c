@@ -45,13 +45,19 @@ int main(int argc, char *argv[]){
     const int SHM_STATUS = 103;
     const int SHM_STARTED = 104;
     
-    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-          "\e[7;36m            IPC CALCULATOR             \e[0m\n"
-          "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", CALLER, __LINE__);
+    /* argv[1] must be the name of the file configuration */
+    if (argc != 2) {
+        print("Usage: ./ipc_calculator.x <name_of_configuration_file>\n", CALLER, __LINE__);
+        exit(1);
+    }
     
     // ==========================================================================================================
     //                                                SETUP - FROM FILE
     // ==========================================================================================================
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+          "\e[7;36m            IPC CALCULATOR             \e[0m\n"
+          "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n", CALLER, __LINE__);
+    
     int fd;
     int i = 0;
     char line[50];
@@ -59,7 +65,8 @@ int main(int argc, char *argv[]){
     struct list* first_element = NULL;
     struct list* last_element = NULL;
     
-    if((fd = open("config.txt",O_RDONLY|O_SYNC, S_IRUSR)) == -1){
+    /* open the file confoiguration */
+    if((fd = open(argv[1], O_RDONLY|O_SYNC, S_IRUSR)) == -1){
         syserr (argv[0], "open() failure");
     }
     

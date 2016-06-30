@@ -1,11 +1,11 @@
 /*! \mainpage IPC CALCULATOR
  *
  * \section intro_sec Introduction
- * This is a simple calculator program that uses the system call (IPC), where it is possible.
+ * This is a simple calculator program that uses the system call (IPC), wherever it is possible.
  * The input of the program is a formatted configuration file like the follow:
  *
  * 5\n
- * 3 2/9\n
+ * 3 2 / 9\n
  * 3 234 + 653\n
  * 4 3444 + 153\n
  * 0 34 * 1873 3 0 - 21534\n
@@ -16,22 +16,20 @@
  *
  * \f[ <id> <num1> <op> <num2> \f]
  * Where:
- *	\li \c AlignLeft left id is the number of the process to execute the operation\n
- *  \li \c AlignLeft left num1 and num2 are the operands\n
- *  \li \c AlignLeft left op is the operator that must be one between: + , - , * , / .\n
+ *	\li \c  id is the number of the process to execute the operation\n
+ *  \li \c  num1 and num2 are the operands\n
+ *  \li \c  op is the operator that must be one between: + , - , * , / .\n
  *
  * The output of the program is a file named \"results.txt\" that will contains the result of all operations in order.
  *
  * \section usage_sec Compilation and execution
- *	To compile this program: open a terminal (prompt in Windows), go to the source directory and type \"make".\n
- * An executable file named \"ipc_calculator.x\" will be created and then it will can executed.
+ * To compile this program: open a terminal (prompt in Windows), go to the source directory and type "make".n
+ * An executable file named "ipc_calculator.x" will be created in source directory, and then it will can executed passing as argument the path of configuration file.
+ * When program complete a file named "results.txt" will be create in sources directory.
  *
- *
- *
- *
- *
- *
- *
+ * \section assumption_sec Assumptions
+ *  \li \c The maximun number of the processes that can be create is 500 and non negative number.
+ *  \li \c All operands of operations in configuration file must be integers.
  *
  *
  */
