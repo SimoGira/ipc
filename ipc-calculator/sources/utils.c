@@ -10,7 +10,7 @@
 #include "../headers/mylib.h"
 #include "../headers/parent.h"
 #include "../headers/child.h"
-
+#include <errno.h>
 
 /******************************************
  MODULO: utils.c
@@ -69,10 +69,14 @@ void sem_v(int semid, int num)
 // ------------------------------------------------------------------------------------------------------------
 void sem_p(int semid, int num)
 {
+    int temp = 0;
     sops.sem_op = -1;
     sops.sem_num = num;
-    if( semop (semid, &sops , 1) == -1){
-        syserr("semaphore", "P");
+    if( (temp = semop (semid, &sops , 1)) == -1){
+        if (errno != EINTR) {
+            syserr("semaphore", "P");
+        }
+        
     }
 }
 
