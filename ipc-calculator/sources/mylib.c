@@ -75,6 +75,7 @@ void list_print(struct list *this){
 void list_free(struct list *this){
     if (this != NULL) { 
         list_free(this->next);
+        free(this->value);
         free(this);
     }
 }
@@ -120,7 +121,7 @@ int read_from_file(int fd, char *line,struct list **first_element, struct list *
             
             line_count++;
             
-            char * str_temp = (char*) malloc(sizeof(char)*i);
+            char * str_temp = (char*) malloc(sizeof(char)*(i+1));
             strcpy(str_temp, line);                                // save each line in to line array
             
             if (*first_element == NULL){
@@ -152,5 +153,4 @@ void print(const char* msg, const char*caller, int line){
     }
     fflush(stdout);
 }
-
 

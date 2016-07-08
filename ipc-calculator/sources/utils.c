@@ -28,13 +28,33 @@ int do_semget(key_t key, int nsems){
 }
 
 // ------------------------------------------------------------------------------------------------------------
-void initialize_sem(int semid, union semun *semarg, unsigned short values[]){
+void initialize_sem(int semid, unsigned short values[]){
     
-    semarg->array = values;
+    union semun arg; // union to pass to semctl()
     
-    if ( semctl(semid, 0, SETALL, *semarg) == -1){
+    arg.array = values;
+    
+    if ( semctl(semid, 0, SETALL, arg) == -1){
         syserr_ext ("utils.c" , "semctl",  __LINE__);
     }
+}   
+
+// ------------------------------------------------------------------------------------------------------------
+void check_semval(int semid, int nsems){
+
+    printf("check init values of semid %d\n", semid);
+    union semun arg; // union to pass to semctl()
+    arg.array = NULL;
+    
+    if( semctl(semid, 0, GETALL, arg) == -1 ){
+        syserr_ext ("utils.c" , "semctl",  __LINE__);
+    }
+
+    int i;
+    for(i = 0; i < nsems; i++){
+        printf("%hu ", arg.array[i]);
+    }
+    printf("\n");
 }
 
 // ------------------------------------------------------------------------------------------------------------
@@ -114,8 +134,5 @@ float process_operation(int val1, int val2, char op){
     }
     return -1;
 }
-
-
-
 
 

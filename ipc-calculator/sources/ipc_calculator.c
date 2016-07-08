@@ -108,7 +108,6 @@ int main(int argc, char *argv[]){
     // ==========================================================================================================
     //                                                SETUP - SEMAPHORE
     // ==========================================================================================================
-    union semun arg; // union to pass to semctl()
     
     unsigned short *sem_init = (unsigned short*) malloc(sizeof(unsigned short) * NPROC);
     for (i = 0; i < NPROC; i++) {
@@ -121,10 +120,9 @@ int main(int argc, char *argv[]){
     sem_request_result = do_semget(ftok(argv[0], 'c'), NPROC);
     
     /* SETALL semphores to zero */
-    initialize_sem(sem_computing, &arg, sem_init);
-    initialize_sem(sem_wait_data, &arg, sem_init);
-    initialize_sem(sem_request_result, &arg, sem_init);
-    
+    initialize_sem(sem_computing, sem_init);
+    initialize_sem(sem_wait_data, sem_init);
+    initialize_sem(sem_request_result, sem_init);
     
     /* CREATE semaphore for parent */
     sem_parent = do_semget(ftok(argv[0], 'd') , 3);
@@ -138,11 +136,18 @@ int main(int argc, char *argv[]){
     *(sem_init + 1) = 0;
     *(sem_init + 2) = 0;
     
-    initialize_sem(sem_parent, &arg, sem_init);
+    initialize_sem(sem_parent, sem_init);
     
     free(sem_init);
     
     int my_semaphores[] = { sem_computing, sem_wait_data, sem_request_result, sem_parent };
+
+    /* check the correct values of each semaphore */
+
+    //check_semval(sem_computing, NPROC);
+    //check_semval(sem_wait_data, NPROC);
+    //check_semval(sem_request_result, NPROC);
+    //check_semval(sem_parent, 3);
     
     // ==========================================================================================================
     //                                                SETUP - SHARED MEMORY
@@ -222,6 +227,8 @@ int main(int argc, char *argv[]){
         }
         
         close(fd);
+        free(operations);
+        free(results);
         
         print("The file \"results.txt\" is written in the sources directory\n", CALLER, __LINE__);
     }

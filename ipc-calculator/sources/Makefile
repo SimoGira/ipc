@@ -7,7 +7,7 @@ OBJS:=$(SRCS:.c=.o)
 # Config:
 HDIR:=../headers/
 CC:=gcc
-CFLAGS:=-Wall -c 
+CFLAGS:=-Wall -c -g
 LD:=gcc 
 LDFLAGS:=-g
 
@@ -44,6 +44,3 @@ ipc_calculator.o: ipc_calculator.c  $(HDIR)mylib.h  $(HDIR)utils.h  $(HDIR)paren
 # Collects as dependencies targets which do not match
 # any generated file name (e.g. all, clean).
 .PHONY: all clean
-
-
-

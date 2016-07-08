@@ -8,6 +8,7 @@
 #include "../headers/parent.h"
 #include "../headers/mylib.h"
 #include "../headers/utils.h"
+#include <sys/wait.h>
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
@@ -30,6 +31,12 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, struct operat
     
     float *results = (float*) malloc(sizeof(float) * n_operations);
     
+    /* initialize the array of results */
+    int i;
+    for (i = 0; i < n_operations; i++) {
+        results[i] = 0.0;
+    }
+    
     sem_computing = my_semaphores[0];
     sem_wait_data = my_semaphores[1];
     sem_request_result = my_semaphores[2];
@@ -39,7 +46,7 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, struct operat
     print(""PARENT" waiting that all childs are ready...\n", CALLER, __LINE__);
     sem_p(sem_parent, 1);
     
-    int i;
+    
     int op_id; // the operation number "op_id"
     for(op_id = 0; op_id < n_operations; op_id++)
     {
@@ -59,9 +66,15 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, struct operat
         
         /* only if child is busy */
         if(!child_isFree[i]) {
-            
-            /* call the busy child routine and save the returned result */
-            results[current_result->id] = busy_child_routine(i, current_result);
+            /*****************************************************************
+             * la seguente istruzione su Linux e' inconsistente perché op_id come
+             * indice dell'array viene pushato sullo stack e poi la funzione lo modica
+             * e ritorna il valore che viene salvato nella vecchia posizione sbagliata!!!!!!! 
+             * ------------------------------------------------------------------------------     /// TENUTA A POSTA PER VAR VEDERE AL PROF QUESTA COSA SPETTACOLARE XD
+             * results[current_result->id] = busy_child_routine(i, current_result);
+             ************************************************************************/
+            busy_child_routine_2(i);
+            results[current_result->id] = current_result->val;
         }
         
         // inserisce i dati della prossima operazione
@@ -89,8 +102,11 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, struct operat
         /* only if child is busy */
         if(!child_isFree[i]) {
             
-            /*  call the busy child routine and save the returned result */
-            results[current_result->id] = busy_child_routine(i, current_result);
+            /*  call the busy child routine and save the returned result  */
+            // results[current_result->id] = busy_child_routine(i, current_result);
+            busy_child_routine_2(i);
+            results[current_result->id] = current_result->val;
+            
         }
         
         //termina processo
@@ -106,7 +122,7 @@ float *my_parent(int my_semaphores[], int n_operations, int NPROC, struct operat
         
         sem_p(sem_parent, 2);
         
-        //wait(NULL);  < ================================================ DA PROVARE !!!!!!
+        wait(NULL);
     }
     
     print_results(results , n_operations);
@@ -130,6 +146,10 @@ int get_first_free_child(int NPROC, bool child_isFree[])
 
 
 //----------------------------------------------------------------------------------------------------------------
+/*
+ * SU LINUX QUESTA FUNZIONE IN QUESTO PROGRAMMA E' CORRETTA SOLAMENTE SE
+ * NON VIENE RITORNATA ALL'INDICE DELL'ARRAY CHE MODIFICA 
+ *
 float busy_child_routine(int child_id, struct result *current_result){
     
     // attende che abbia finito il calcolo
@@ -150,6 +170,28 @@ float busy_child_routine(int child_id, struct result *current_result){
     print_parent_info(""PARENT" saving the result of opration processed from child %d...\n", child_id);
     return current_result->val;
 }
+*/
+
+//----------------------------------------------------------------------------------------------------------------
+void busy_child_routine_2(int child_id){
+    
+    // attende che abbia finito il calcolo
+    print_parent_info(""PARENT" waiting that child %d finish to process the operation\n", child_id);
+    
+    sem_p(sem_computing, child_id);
+    
+    // richiede eventuali dati precedenti
+    print_parent_info(""PARENT" request the result to child %d\n", child_id);
+    
+    sem_v(sem_request_result, child_id);
+    
+    //aspetta che i dati siano pronti da leggere
+    print_parent_info(""PARENT" waiting for result from child %d ...\n", child_id);
+    
+    sem_p(sem_parent, 1);
+    
+    print_parent_info(""PARENT" saving the result of opration processed from child %d...\n", child_id);
+}
 
 //----------------------------------------------------------------------------------------------------------------
 void print_parent_info(const char *info, int child_id){
@@ -168,20 +210,8 @@ void print_results(float results[] , int n_operations){
     for(i = 0; i < n_operations; i++)
     {
         sprintf(res, "%.2f\n", results[i]);
-        print(res, CALLER, __LINE__);
-        
+        print(res, CALLER, __LINE__);   
     }
     print("-------------------------------------\n", CALLER, __LINE__);
 }
-
-
-
-
-
-
-
-
-
-
-
 

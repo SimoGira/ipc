@@ -132,12 +132,20 @@ int do_semget(key_t key, int nsems);
  * @brief This function initilize all semaphores using an array of values using semctl() function
  *
  * @param semid the id of semaphore (returned from a semget())
- * @param semarg the union semun to pass to semctl()
  * @param values the array of values to set semaphore
  * @see semun
  * @return void
  */
-void initialize_sem(int semid, union semun *semarg, unsigned short values[]);
+void initialize_sem(int semid, unsigned short values[]);
+
+/**
+ * @brief This function check the correct initials values of semaphores
+ *
+ * @param semid the id of semaphore (returned from a semget())
+ * @param nsems the number of semaphore that will be contained in semophores vector
+ * @return void
+ */
+void check_semval(int semid, int nsems);
 
 /**
  * @brief This function increment the value of a semaphore using semop() function

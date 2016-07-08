@@ -67,6 +67,20 @@ int get_first_free_child(int NPROC, bool child_isFree[]);
 float busy_child_routine(int child_id, struct result *current_result);
 
 /**
+ * @brief This function is a routing that is called from the parent when it wants receive the result of an operation from a specific child, or it 
+ * wants terminate a specific child.
+ *
+ * If the selected child isn't ready to read the data for the new operation, then the parent wait the
+ * selected child complete to compute the operation and then it request for the result. When the result is ready, the parent read it and save the
+ * result in current_result struct.
+ *
+ * @param child_id
+ * @see my_parent
+ * @return void
+ */
+void busy_child_routine_2(int child_id);
+
+/**
  * @ This function is used to print on STDOUT the current status of parent
  * 
  * This function allows us to see how the parent manage his childs

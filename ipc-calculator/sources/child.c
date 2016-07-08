@@ -91,9 +91,11 @@ void child(int id_number, int NPROC, int my_semaphores[], int *childs_ready, str
         
         print_child_info("[Child %d] write the result...\n", id_number);
         
+        
         // scrivi risultato calcolo         //***************************
         current_result->val = res;          //**** CRITICAL SECTION *****
         current_result->id = op_id;         //***************************
+
         
         print_child_info("[Child %d] result ready to be read!\n", id_number);
         
