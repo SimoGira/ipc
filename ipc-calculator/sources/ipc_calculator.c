@@ -182,7 +182,8 @@ int main(int argc, char *argv[]){
         } else if (pid == 0) {      // code execute from child
             id_number = i;        // assign id number to child process
             child(id_number, NPROC, my_semaphores, childs_ready, current_operation, current_result, child_isFree);
-            break;
+            free(operations);
+            exit(0);
         } else {
             if(snprintf(str_info, 100, ""PARENT" create child %d with pid = %d\n" , i+1, pid) == -1){
                 syserr(argv[0], "snprintf() error oversized string");
